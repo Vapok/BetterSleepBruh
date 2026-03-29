@@ -1,0 +1,11 @@
+{
+  "name": "BetterSleepBruh",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/Vapok/BetterSleepBruh",
+  "description": "A Valheim Mod that Sleeps Like Enshrouded! Sleep on your own terms! Sleep the night away faster without everyone having to be in a bed! Get Better Sleep, Bruh!",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2333",
+    "ValheimModding-Jotunn-2.28.0",
+    "ValheimModding-YamlDotNet-16.3.1"
+  ]
+}
