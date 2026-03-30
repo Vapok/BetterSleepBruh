@@ -57,7 +57,7 @@ public class SleepTracker : MonoBehaviour
         if (playersSleeping <= 0 || playersSleeping >= playerCount)
             return 0.0;
         var sleepFraction = playersSleeping / (double)(playerCount - 1);
-        return ConfigRegistry.BonusMultiplier.Value * sleepFraction;
+        return ConfigRegistry.BonusMultiplier.Value * sleepFraction * ConfigRegistry.BonusIncrementScale.Value;
     }
 
     public static double GetNextMorningCapSeconds()
@@ -74,8 +74,8 @@ public class SleepTracker : MonoBehaviour
 
     /*
     * Extra game-time per real second (additive after vanilla m_netTime += dt).
-    * sleepFraction = playersSleeping / (playerCount - 1) with
-    * playerCount = max(characterZdos, GetNrOfPlayers()).
+    * extraRate = BonusMultiplier × sleepFraction × BonusIncrementScale (10).
+    * playerCount = max(zdos, GetNrOfPlayers()), with testing overrides applied.
     */
     public static double ComputePartialSleepBoost()
     {

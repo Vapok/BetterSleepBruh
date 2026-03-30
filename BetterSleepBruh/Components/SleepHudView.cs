@@ -164,21 +164,28 @@ public sealed class SleepHudView : MonoBehaviour
         if (_boostTmp == null)
             return;
 
-        var pct = GetBoostLabelPercent(totalPlayers, playersSleeping);
+        var pct = GetBonusLabelPercent(totalPlayers, playersSleeping);
         if (pct <= 0.0001)
             _boostTmp.text = "+0%";
         else
             _boostTmp.text = $"+{pct:F0}%";
     }
 
-    private static double GetBoostLabelPercent(int playerCount, int playersSleeping)
+    /*
+    * Aligns with partial-sleep idea: max configured benefit when at least (total − 1) are in bed.
+    * Below that: linear in sleeping/total × BonusMultiplier × 100 (no ConfigRegistry.BonusIncrementScale).
+    */
+    private static double GetBonusLabelPercent(int playerCount, int playersSleeping)
     {
-        if (playerCount <= 1)
+        if (playerCount <= 1 || playersSleeping <= 0)
             return 0.0;
-        if (playersSleeping <= 0 || playersSleeping >= playerCount)
-            return 0.0;
-        var sleepFraction = playersSleeping / (double)(playerCount - 1);
-        return ConfigRegistry.BonusMultiplier.Value * sleepFraction * 100.0;
+
+        var maxPct = ConfigRegistry.BonusMultiplier.Value * 100.0;
+        // Same “all but one” cap as boost sleepFraction = sleeping / (total − 1) at 1.0 when sleeping == total − 1.
+        if (playersSleeping >= playerCount - 1)
+            return maxPct;
+
+        return playersSleeping / (double)playerCount * maxPct;
     }
 
     private void BuildContent(RectTransform rootRt, TMP_FontAsset font)

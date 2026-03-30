@@ -16,6 +16,8 @@ namespace BetterSleepBruh.Configuration
         public static ConfigEntry<int> TestingSleepingPlayers;
         public static ConfigEntry<float> SleepStart;
         public static ConfigEntry<float> BonusMultiplier;
+        public static ConfigEntry<float> BonusIncrementScale;
+
 
         public ConfigRegistry(IPluginInfo mod, bool enableLockedConfigs = false): base(mod, enableLockedConfigs)
         {
@@ -43,9 +45,15 @@ namespace BetterSleepBruh.Configuration
 
             SyncedConfig("Server Settings", "Bonus Multiplier", 0.6f,
                 new ConfigDescription(
-                    "Maximum extra night speed when everyone but one player is in bed: effective rate is 1 + (this × sleep fraction) game-seconds per real second (e.g. 0.6 and all-but-one sleeping ⇒ 1.6×).",
+                    "Scales the bonus increment (added on top of normal time): extra rate = this × sleep fraction × 10. At 1.0 and all-but-one in bed, extra rate is 10 (time advances 11× vs vanilla dt alone).",
                     new AcceptableValueRange<float>(0f, 1f), 
                     new ConfigurationManagerAttributes { Order = 3, IsAdminOnly = true }),ref BonusMultiplier);
+
+            SyncedConfig("Server Settings", "Bonus Increment Scale", 10f,
+                new ConfigDescription(
+                    "Scales the bonus increment (added on top of normal time): extra rate = this × sleep fraction × 10. At 1.0 and all-but-one in bed, extra rate is 10 (time advances 11× vs vanilla dt alone).",
+                    new AcceptableValueRange<float>(0f, 30f), 
+                    new ConfigurationManagerAttributes { Order = 4, IsAdminOnly = true }),ref BonusIncrementScale);
 
             SyncedConfig("Testing Mode", "Enable Testing Mode", false,
                 new ConfigDescription(
@@ -57,13 +65,13 @@ namespace BetterSleepBruh.Configuration
             SyncedConfig("Testing Mode", "Fake Total Players", 10,
                 new ConfigDescription(
                     "Spoofed total player count while Testing Mode is on.",
-                    new AcceptableValueRange<int>(2, 100), 
+                    new AcceptableValueRange<int>(2, 80), 
                     new ConfigurationManagerAttributes { Order = 5, IsAdminOnly = true }),ref TestingMaxPlayers);
 
             SyncedConfig("Testing Mode", "Simulate Players In Bed", 1,
                 new ConfigDescription(
                     "Spoofed count of players in bed while Testing Mode is on (clamped to Fake Total Players).",
-                    new AcceptableValueRange<int>(1, 100), 
+                    new AcceptableValueRange<int>(0, 80), 
                     new ConfigurationManagerAttributes { Order = 6, IsAdminOnly = true}),ref TestingSleepingPlayers);
 
         }
