@@ -108,6 +108,7 @@
         <Compile Include="Configuration\ConfigRegistry.cs" />
         <Compile Include="Patches\EnvMan.cs" />
         <Compile Include="Patches\FejdStartup.cs" />
+        <Compile Include="Patches\ZDO.cs" />
         <Compile Include="Patches\ZNet.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="BetterSleepBruh.cs" />

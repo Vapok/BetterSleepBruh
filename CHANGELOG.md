@@ -1,5 +1,28 @@
 # Better Sleep _Bruh!_ Changelog
 
+
+### 1.0.1 - Bug Fixes and Sleep Calculation Refactor
+* Refactored Sleep Calculations
+* Refactored Mod Load and Initializers
+* Added "Use Vanilla Start Sleep" config to not change Valheim's Start Sleep calucation.
+* Added Additional Bonus Configuration Variables
+  * Bonus Increment Scale - Default: 20x
+    * Adjust the scale factor of benefit of the sleep bonus. This allows server admins to adjust the overall sleep benefit to their liking.
+  * Boost Fade (in Second) - Default 3 seconds
+    * Adjusts when the boosting will scale down prior to morning, this allows a smooth ramp down to normal speed as morning approaches.
+* Added Testing Capabilities
+  * All New Settings Override Server Values for this Mod ONLY. Doesn't actually affect number of players on server or in bed. Used for testing the GUI and Timepseed on the server.
+  * Testing Configuration Settings:
+    * Enable Testing Mode - Default: false
+      * You should NOT enable this on a real public server without warning players. 
+      * Used for testing settings and making sure you have the right speed for your server.
+    * Fake Total Players
+      * Spoofs the total number of players on the server that the mod sees.
+    * Simulate Players In Bed
+      * Spoofs number of players in bed. Does NOT count number of REAL players in bed.
+* Fixed Bug: Not All Players would Register as Players. This caused incorrect max percentages.
+* Fixed Bug: When Player logs out (but not quit Valheim game) mod would not reload.
+
 ### 1.0.0 - Better Sleep _Bruh!_ Initial Release
 Gone are the days of asking for everyone to run to a bed, or to log off, just to make night go away faster.  Get Better Sleep Bruh! The mod that allows players on a server help make night go faster without completely eliminating night. This allows players to still enjoy benefits of night but also not have to run to a bed to make morning come faster!
 * Provides the following Configurations:
