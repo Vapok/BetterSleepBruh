@@ -1,5 +1,13 @@
 # Better Sleep _Bruh!_ Changelog
 
+
+### 1.0.1 - Bug Fixes and Sleep Calculation Refactor
+* Refactored Sleep Calculations
+* Refactored Mod Load and Initializers
+* Added "Use Vanilla Start Sleep" config to not change Valheim's Start Sleep calucation.
+* Fixed Bug: Not All Players would Register as Players. This caused incorrect max percentages.
+* Fixed Bug: When Player logs out (but not quit Valheim game) mod would not reload.
+
 ### 1.0.0 - Better Sleep _Bruh!_ Initial Release
 Gone are the days of asking for everyone to run to a bed, or to log off, just to make night go away faster.  Get Better Sleep Bruh! The mod that allows players on a server help make night go faster without completely eliminating night. This allows players to still enjoy benefits of night but also not have to run to a bed to make morning come faster!
 * Provides the following Configurations:

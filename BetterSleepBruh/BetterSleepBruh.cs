@@ -29,6 +29,7 @@ namespace BetterSleepBruh
         
         private SleepHudView _sleepHud;
         private int _sleepHudBuildAttempts;
+        private bool _zNetHasStopped;
 
         
         //Interface Properties
@@ -76,6 +77,7 @@ namespace BetterSleepBruh
             _harmony = new Harmony(Info.Metadata.GUID);
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
 
+
             //???
 
             //Profit
@@ -83,49 +85,69 @@ namespace BetterSleepBruh
 
         private void Start()
         {
+            ConfigRegistry.Waiter.ConfigurationComplete(true);
             InvokeRepeating(nameof(WaitForGame), 1f, 1f);
             InvokeRepeating(nameof(WaitForZNet), 1f, 1f);
-            InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
         }
+
         private void WaitForGame()
         {
             if (Game.instance == null)
                 return;
 
             CancelInvoke(nameof(WaitForGame));
+            
+            InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
         }
 
         private void WaitForZNet()
         {
-            if (ZNet.instance == null)
+            if (ZNet.instance == null || _zNetHasStopped)
                 return;
 
             CancelInvoke(nameof(WaitForZNet));
             
             if (!ZNet.instance.IsServer())
                 return;
-            
             Game.instance.gameObject.AddComponent<SleepTracker>();
         }
 
         private void TryBuildSleepHud()
         {
+            Log.Debug($"Waiting for GuiBuild");
             if (_sleepHud != null)
             {
                 CancelInvoke(nameof(TryBuildSleepHud));
                 return;
             }
 
+            Log.Debug($"[GuiBuild] Checking for Server...");
+            // No need to build the UI if this if this is a dedicated server
+            if (ZNet.instance != null && ZNet.instance.IsDedicated())
+            {
+                CancelInvoke(nameof(TryBuildSleepHud));
+                return;
+            }
+
+            Log.Debug($"[GuiBuild] Checking for previous ZNetShutdown {_zNetHasStopped}...");
+            if (_zNetHasStopped) return;
+            
+            Log.Debug($"[GuiBuild] Checking for Player...");
+            if (Player.m_localPlayer == null) return;
+            
+            Log.Debug($"[GuiBuild] Checking Attempts...");
             if (_sleepHudBuildAttempts++ > 120)
             {
                 CancelInvoke(nameof(TryBuildSleepHud));
-                BetterSleepBruh.Log.Warning("[CLIENT] Gave up building sleep HUD: minimap hierarchy not found in time.");
+                Log.Warning("[GuiBuild] Gave up building sleep HUD: minimap hierarchy not found in time.");
                 return;
             }
 
+            Log.Debug($"[GuiBuild] Building GUI");
             BuildSleepGui();
             if (_sleepHud != null)
                 CancelInvoke(nameof(TryBuildSleepHud));
+            Log.Debug($"[GuiBuild] SleepHud is built: {_sleepHud != null}");
         }
 
         private void BuildSleepGui()
@@ -133,21 +155,21 @@ namespace BetterSleepBruh
             var goGameMain = GameObject.Find("_GameMain");
             if (goGameMain == null)
             {
-                BetterSleepBruh.Log.Debug($"[CLIENT] Can't Find _GameMain");
+                Log.Debug($"[GuiBuild] Can't Find _GameMain");
                 return;
             }
             
             var goHud = goGameMain.transform.Find("LoadingGUI/PixelFix/IngameGui/HUD/hudroot");
             if (goHud == null)
             {
-                BetterSleepBruh.Log.Debug($"[CLIENT] Can't Find HUD");
+                Log.Debug($"[GuiBuild] Can't Find HUD");
                 return;
             }
 
             var goMiniMap = goHud.Find("MiniMap/small");
             if (goMiniMap == null)
             {
-                BetterSleepBruh.Log.Debug($"[CLIENT] Can't Find Minimap");
+                Log.Debug($"[GuiBuild] Can't Find Minimap");
                 return;
             }
 
@@ -155,25 +177,33 @@ namespace BetterSleepBruh
 
             if (_sleepHud != null)
             {
-                _sleepHud.gameObject.SetActive(false);
+                _sleepHud.gameObject.SetActive(EnvMan.CanSleep());
                 return;
             }
 
-            BetterSleepBruh.Log.Warning($"[CLIENT] Can't Build SleepHud");
+            Log.Warning($"[GuiBuild] Can't Build SleepHud");
         }
         
         private void Update()
         {
-            if (!Player.m_localPlayer || !ZNetScene.instance)
+            if (!Player.m_localPlayer || !ZNetScene.instance || Game.instance == null)
                 return;
+            
+            _zNetHasStopped = ZNet.instance.HaveStopped;
+
+            if (!_zNetHasStopped) return;
+            if (_sleepHud != null)
+            {
+                InvokeRepeating(nameof(WaitForZNet), 1f, 1f);
+                InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
+                _sleepHud = null;
+            }
         }
 
         public void InitializeModule(object send, EventArgs args)
         {
             if (ValheimAwake)
                 return;
-            
-            ConfigRegistry.Waiter.ConfigurationComplete(true);
 
             ValheimAwake = true;
         }

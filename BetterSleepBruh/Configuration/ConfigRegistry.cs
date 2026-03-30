@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using BepInEx.Configuration;
 using Vapok.Common.Abstractions;
 using Vapok.Common.Managers.Configuration;
@@ -10,6 +10,7 @@ namespace BetterSleepBruh.Configuration
         //Configuration Entry Privates
         
         public static Waiting Waiter;
+        public static ConfigEntry<bool> UseVanilleSleep;
         public static ConfigEntry<float> SleepStart;
         public static ConfigEntry<float> BonusMultiplier;
 
@@ -27,15 +28,21 @@ namespace BetterSleepBruh.Configuration
                 return;
             
             //User Configs
+            SyncedConfig("Server Settings", "Use Vanilla Sleep Start", false,
+                new ConfigDescription("Default is false/disabled; Set to True/Enabled to resume Vanilla Sleep Start",
+                    null, 
+                    new ConfigurationManagerAttributes { Order = 1 }),ref UseVanilleSleep);
+
             SyncedConfig("Server Settings", "Sleep Start", 0.5f,
-                new ConfigDescription("Day Fraction to allow sleep to begin. Default is 0.5, or Noon",
+                new ConfigDescription("Day Fraction to allow sleep to begin. Default is 0.5, or Noon. Only applies when Vanilla Sleep Start is disabled/false.",
                     new AcceptableValueRange<float>(0f, 0.99f), 
-                    new ConfigurationManagerAttributes { Order = 1 }),ref SleepStart);
+                    new ConfigurationManagerAttributes { Order = 2 }),ref SleepStart);
 
             SyncedConfig("Server Settings", "Bonus Multiplier", 0.6f,
-                new ConfigDescription("Maximum benefit of Time Boost if everyone but 1 person is in a bed. Default 60%",
+                new ConfigDescription(
+                    "Maximum extra night speed when everyone but one player is in bed: effective rate is 1 + (this × sleep fraction) game-seconds per real second (e.g. 0.6 and all-but-one sleeping ⇒ 1.6×).",
                     new AcceptableValueRange<float>(0f, 1f), 
-                    new ConfigurationManagerAttributes { Order = 1 }),ref BonusMultiplier);
+                    new ConfigurationManagerAttributes { Order = 3 }),ref BonusMultiplier);
 
         }
     }

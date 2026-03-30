@@ -10,6 +10,9 @@ public class EnvManPatches
     {
         static bool Prefix(EnvMan __instance, ref bool __result)
         {
+            if (ConfigRegistry.UseVanilleSleep.Value)
+                return true;
+            
             var dayFraction = __instance.GetDayFraction();
             var sleepStart = ConfigRegistry.SleepStart.Value;
             if (sleepStart < 0.25f)

@@ -1,11 +1,15 @@
 using System;
 using System.Reflection;
+using BetterSleepBruh.Configuration;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace BetterSleepBruh.Components;
 
+/*
+* Client UI only: displays server-driven sleep HUD data from routed RPCs. Does not modify world time.
+*/
 public sealed class SleepHudView : MonoBehaviour
 {
     private RectTransform _segmentsRoot;
@@ -34,15 +38,14 @@ public sealed class SleepHudView : MonoBehaviour
 
     }
 
-    
     private void RPC_SleepingPlayerInfo(long sender, int totalPlayers, int playersSleeping, double sleepBoost)
     {
         if (Player.m_localPlayer == null)
             return;
 
-        BetterSleepBruh.Log.Info($"[CLIENT] Total Players: {totalPlayers}");
-        BetterSleepBruh.Log.Info($"[CLIENT] Players Sleeping: {playersSleeping}");
-        BetterSleepBruh.Log.Info($"[CLIENT] Sleep Boost (extra rate × dt): {sleepBoost}");
+        BetterSleepBruh.Log.Debug($"[CLIENT] Total Players: {totalPlayers}");
+        BetterSleepBruh.Log.Debug($"[CLIENT] Players Sleeping: {playersSleeping}");
+        BetterSleepBruh.Log.Debug($"[CLIENT] Sleep Boost (extra rate × dt): {sleepBoost}");
 
         gameObject.SetActive(EnvMan.CanSleep());
         Refresh(totalPlayers, playersSleeping);
@@ -53,7 +56,7 @@ public sealed class SleepHudView : MonoBehaviour
         if (Player.m_localPlayer == null)
             return;
 
-        BetterSleepBruh.Log.Info($"[CLIENT] Start Sleep");
+        BetterSleepBruh.Log.Debug($"[CLIENT] Start Sleep");
 
         gameObject.SetActive(true);
     }
@@ -63,7 +66,7 @@ public sealed class SleepHudView : MonoBehaviour
         if (Player.m_localPlayer == null)
             return;
 
-        BetterSleepBruh.Log.Info($"[CLIENT] Stop Sleep");
+        BetterSleepBruh.Log.Debug($"[CLIENT] Stop Sleep");
 
         var player = Player.m_localPlayer;
         
@@ -140,11 +143,21 @@ public sealed class SleepHudView : MonoBehaviour
         if (_boostTmp == null)
             return;
 
-        var pct = SleepTracker.GetHudBoostDisplayPercent(totalPlayers, playersSleeping);
+        var pct = GetBoostLabelPercent(totalPlayers, playersSleeping);
         if (pct <= 0.0001)
             _boostTmp.text = "+0%";
         else
             _boostTmp.text = $"+{pct:F0}%";
+    }
+
+    private static double GetBoostLabelPercent(int playerCount, int playersSleeping)
+    {
+        if (playerCount <= 1)
+            return 0.0;
+        if (playersSleeping <= 0 || playersSleeping >= playerCount)
+            return 0.0;
+        var sleepFraction = playersSleeping / (double)(playerCount - 1);
+        return ConfigRegistry.BonusMultiplier.Value * sleepFraction * 100.0;
     }
 
     private void BuildContent(RectTransform rootRt, TMP_FontAsset font)
@@ -447,7 +460,7 @@ public sealed class SleepHudView : MonoBehaviour
 
                 tex.filterMode = FilterMode.Bilinear;
                 tex.wrapMode = TextureWrapMode.Clamp;
-                BetterSleepBruh.Log.Info($"[SleepHud] Using embedded HUD icon: {match}");
+                BetterSleepBruh.Log.Debug($"[SleepHud] Using embedded HUD icon: {match}");
                 return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
             }
         }
