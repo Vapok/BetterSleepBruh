@@ -37,12 +37,17 @@ public class SleepTracker : MonoBehaviour
 
         var zdos = znet.GetAllCharacterZDOS();
         var sessionPlayers = znet.GetNrOfPlayers();
-        playerCount = System.Math.Max(zdos.Count, sessionPlayers);
+        var realTotal = System.Math.Max(zdos.Count, sessionPlayers);
+        playerCount = ConfigRegistry.GetEffectiveTotalPlayersForMod(realTotal);
+
+        var realSleeping = 0;
         foreach (var z in zdos)
         {
             if (IsCharacterInBedForBoost(z))
-                playersSleeping++;
+                realSleeping++;
         }
+
+        playersSleeping = ConfigRegistry.GetEffectiveSleepingPlayersForMod(realSleeping, playerCount);
     }
 
     private static double ComputeExtraRateForPartialBoost(int playerCount, int playersSleeping)
@@ -166,7 +171,10 @@ public class SleepTracker : MonoBehaviour
         GetSleepOccupancyCounts(out var playersOnServer, out var playersSleeping);
         var boost = ComputePartialSleepBoost();
 
-        BetterSleepBruh.Log.Debug($"[SERVER] Player Sleeping Info: Players on Server: {playersOnServer} Players Sleeping: {playersSleeping} Extra rate: {boost}");
+        if (ConfigRegistry.IsPlayerCountTestingActive)
+            BetterSleepBruh.Log.Debug($"[BetterSleepBruh TESTING] broadcast total={playersOnServer} sleeping={playersSleeping} extraRate={boost}");
+        else
+            BetterSleepBruh.Log.Debug($"[SERVER] Player Sleeping Info: Players on Server: {playersOnServer} Players Sleeping: {playersSleeping} Extra rate: {boost}");
 
         ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,
             "RPC_SleepingPlayerInfo",

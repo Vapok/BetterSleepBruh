@@ -12,10 +12,16 @@ namespace BetterSleepBruh.Components;
 */
 public sealed class SleepHudView : MonoBehaviour
 {
+    // Beyond this many players, show one pillow + numeric X/Y instead of one icon per player.
+    private const int MaxPillowSegments = 5;
+
     private RectTransform _segmentsRoot;
     private Image[] _segments = System.Array.Empty<Image>();
     private TextMeshProUGUI _boostTmp;
+    private TextMeshProUGUI _ratioTmp;
+    private TMP_FontAsset _hudFont;
     private int _lastTotal = -1;
+    private bool _compactLayout;
 
     private static readonly Color BgMidnight = new(0f, 0f, 0f, 0.39f);
     private static readonly Color PillowAwakeTint = new(0.32f, 0.32f, 0.34f, 1f);
@@ -43,9 +49,14 @@ public sealed class SleepHudView : MonoBehaviour
         if (Player.m_localPlayer == null)
             return;
 
-        BetterSleepBruh.Log.Debug($"[CLIENT] Total Players: {totalPlayers}");
-        BetterSleepBruh.Log.Debug($"[CLIENT] Players Sleeping: {playersSleeping}");
-        BetterSleepBruh.Log.Debug($"[CLIENT] Sleep Boost (extra rate × dt): {sleepBoost}");
+        if (ConfigRegistry.IsPlayerCountTestingActive)
+            BetterSleepBruh.Log.Debug($"[BetterSleepBruh TESTING] HUD total={totalPlayers} sleeping={playersSleeping} extraRate={sleepBoost}");
+        else
+        {
+            BetterSleepBruh.Log.Debug($"[CLIENT] Total Players: {totalPlayers}");
+            BetterSleepBruh.Log.Debug($"[CLIENT] Players Sleeping: {playersSleeping}");
+            BetterSleepBruh.Log.Debug($"[CLIENT] Sleep Boost (extra rate × dt): {sleepBoost}");
+        }
 
         gameObject.SetActive(EnvMan.CanSleep());
         Refresh(totalPlayers, playersSleeping);
@@ -137,8 +148,18 @@ public sealed class SleepHudView : MonoBehaviour
         playersSleeping = Mathf.Clamp(playersSleeping, 0, totalPlayers);
 
         EnsureSegments(totalPlayers);
-        for (var i = 0; i < _segments.Length; i++)
-            _segments[i].color = i < playersSleeping ? Color.white : PillowAwakeTint;
+        if (_compactLayout)
+        {
+            if (_segments.Length == 1)
+                _segments[0].color = playersSleeping > 0 ? Color.white : PillowAwakeTint;
+            if (_ratioTmp != null)
+                _ratioTmp.text = $"{playersSleeping}/{totalPlayers}";
+        }
+        else
+        {
+            for (var i = 0; i < _segments.Length; i++)
+                _segments[i].color = i < playersSleeping ? Color.white : PillowAwakeTint;
+        }
 
         if (_boostTmp == null)
             return;
@@ -162,6 +183,8 @@ public sealed class SleepHudView : MonoBehaviour
 
     private void BuildContent(RectTransform rootRt, TMP_FontAsset font)
     {
+        _hudFont = font;
+
         var rowGo = new GameObject("Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
         var rowRt = (RectTransform)rowGo.transform;
         rowRt.SetParent(rootRt, false);
@@ -205,10 +228,15 @@ public sealed class SleepHudView : MonoBehaviour
 
     private void EnsureSegments(int total)
     {
-        if (total == _lastTotal && _segments.Length == total)
+        var compact = total > MaxPillowSegments;
+        var expectedSegCount = compact ? 1 : total;
+        if (total == _lastTotal && _compactLayout == compact && _segments.Length == expectedSegCount)
             return;
 
         _lastTotal = total;
+        _compactLayout = compact;
+        _ratioTmp = null;
+
         foreach (Transform c in _segmentsRoot)
             Destroy(c.gameObject);
 
@@ -219,22 +247,77 @@ public sealed class SleepHudView : MonoBehaviour
         }
 
         var pillowSprite = GetPillowSegmentSprite();
-        _segments = new Image[total];
-        for (var i = 0; i < total; i++)
+
+        if (compact)
         {
-            var segGo = new GameObject($"Seg_{i}", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
-            segGo.transform.SetParent(_segmentsRoot, false);
+            var pillowWrap = new GameObject("PillowCompact", typeof(RectTransform), typeof(LayoutElement));
+            pillowWrap.transform.SetParent(_segmentsRoot, false);
+            var pillowLe = pillowWrap.GetComponent<LayoutElement>();
+            pillowLe.flexibleWidth = 0f;
+            pillowLe.minWidth = 28f;
+            pillowLe.preferredWidth = 40f;
+            pillowLe.preferredHeight = 22f;
+            pillowLe.flexibleHeight = 1f;
+
+            var segGo = new GameObject("Seg_0", typeof(RectTransform), typeof(Image));
+            var segRt = (RectTransform)segGo.transform;
+            segRt.SetParent(pillowWrap.transform, false);
+            StretchFull(segRt);
             var img = segGo.GetComponent<Image>();
             img.sprite = pillowSprite;
             img.type = Image.Type.Simple;
             img.preserveAspect = true;
             img.color = PillowAwakeTint;
             img.raycastTarget = false;
-            var le = segGo.GetComponent<LayoutElement>();
-            le.flexibleWidth = 1f;
-            le.preferredHeight = 22f;
-            le.minWidth = 8f;
-            _segments[i] = img;
+
+            _segments = new[] { img };
+
+            var ratioWrap = new GameObject("Ratio", typeof(RectTransform), typeof(LayoutElement));
+            ratioWrap.transform.SetParent(_segmentsRoot, false);
+            var ratioLe = ratioWrap.GetComponent<LayoutElement>();
+            ratioLe.flexibleWidth = 1f;
+            ratioLe.minWidth = 52f;
+            ratioLe.preferredHeight = 22f;
+            ratioLe.flexibleHeight = 1f;
+
+            if (_hudFont != null)
+            {
+                var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                var labelRt = (RectTransform)labelGo.transform;
+                labelRt.SetParent(ratioWrap.transform, false);
+                StretchFull(labelRt);
+                _ratioTmp = labelGo.GetComponent<TextMeshProUGUI>();
+                ApplyFont(_ratioTmp, _hudFont);
+                // Match _boostTmp (CreateTmpInRow "Boost": 14f, BoostYellow)
+                _ratioTmp.fontSize = 14f;
+                _ratioTmp.color = BoostYellow;
+                _ratioTmp.text = "0/0";
+                _ratioTmp.alignment = TextAlignmentOptions.MidlineLeft;
+                _ratioTmp.textWrappingMode = TextWrappingModes.NoWrap;
+                _ratioTmp.overflowMode = TextOverflowModes.Overflow;
+                _ratioTmp.raycastTarget = false;
+                _ratioTmp.margin = Vector4.zero;
+            }
+        }
+        else
+        {
+            _segments = new Image[total];
+            for (var i = 0; i < total; i++)
+            {
+                var segGo = new GameObject($"Seg_{i}", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+                segGo.transform.SetParent(_segmentsRoot, false);
+                var img = segGo.GetComponent<Image>();
+                img.sprite = pillowSprite;
+                img.type = Image.Type.Simple;
+                img.preserveAspect = true;
+                img.color = PillowAwakeTint;
+                img.raycastTarget = false;
+                var le = segGo.GetComponent<LayoutElement>();
+                le.flexibleWidth = 1f;
+                le.preferredHeight = 22f;
+                le.minWidth = 8f;
+                _segments[i] = img;
+            }
         }
     }
 
