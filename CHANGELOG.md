@@ -5,6 +5,21 @@
 * Refactored Sleep Calculations
 * Refactored Mod Load and Initializers
 * Added "Use Vanilla Start Sleep" config to not change Valheim's Start Sleep calucation.
+* Added Additional Bonus Configuration Variables
+  * Bonus Increment Scale - Default: 20x
+    * Adjust the scale factor of benefit of the sleep bonus. This allows server admins to adjust the overall sleep benefit to their liking.
+  * Boost Fade (in Second) - Default 3 seconds
+    * Adjusts when the boosting will scale down prior to morning, this allows a smooth ramp down to normal speed as morning approaches.
+* Added Testing Capabilities
+  * All New Settings Override Server Values for this Mod ONLY. Doesn't actually affect number of players on server or in bed. Used for testing the GUI and Timepseed on the server.
+  * Testing Configuration Settings:
+    * Enable Testing Mode - Default: false
+      * You should NOT enable this on a real public server without warning players. 
+      * Used for testing settings and making sure you have the right speed for your server.
+    * Fake Total Players
+      * Spoofs the total number of players on the server that the mod sees.
+    * Simulate Players In Bed
+      * Spoofs number of players in bed. Does NOT count number of REAL players in bed.
 * Fixed Bug: Not All Players would Register as Players. This caused incorrect max percentages.
 * Fixed Bug: When Player logs out (but not quit Valheim game) mod would not reload.
 

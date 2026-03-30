@@ -1,5 +1,6 @@
 using System;
 using BetterSleepBruh.Components;
+using BetterSleepBruh.Configuration;
 using HarmonyLib;
 
 namespace BetterSleepBruh.Patches;
@@ -21,19 +22,41 @@ public class ZNetPatches
             if (extraRate <= 0.0) return;
 
             var time = __instance.GetTimeSeconds();
-            var morningCap = SleepTracker.GetNextMorningCapSeconds();
+            // Same morning target as EnvMan.SkipToMorning: GetMorningStartSec(day + 1) from GetDay(time - 0.15 * dayLen).
+            var morningStartSec = SleepTracker.GetNextMorningCapSeconds();
 
-            if (time >= morningCap)
+            if (double.IsPositiveInfinity(morningStartSec))
             {
-                time = morningCap;
+                __instance.SetNetTime(time + dt * extraRate);
+                return;
             }
-            else
+
+            if (time >= morningStartSec)
             {
-                time += dt * extraRate;
-                time = Math.Min(time, morningCap);
+                __instance.SetNetTime(morningStartSec);
+                return;
             }
-            
-            __instance.SetNetTime(time);
+
+            var remainingToMorning = morningStartSec - time;
+
+            var effectiveExtraRate = extraRate;
+            var fadeReal = ConfigRegistry.BoostFadeRealSecondsBeforeMorning != null
+                ? ConfigRegistry.BoostFadeRealSecondsBeforeMorning.Value
+                : 2f;
+            if (fadeReal > 0.0f)
+            {
+                // Net game-time rate from vanilla dt + our boost is (1 + extraRate) game-sec per real-sec.
+                // Last `fadeReal` real-time seconds of the approach span `fadeReal * (1 + extraRate)` game-sec before morning.
+                var totalRate = 1.0 + extraRate;
+                var fadeWindowGame = fadeReal * totalRate;
+                if (remainingToMorning < fadeWindowGame)
+                    effectiveExtraRate = extraRate * (remainingToMorning / fadeWindowGame);
+            }
+
+            var boostDelta = dt * effectiveExtraRate;
+            // Do not overshoot morningStartSec (same target as EnvMan.SkipToMorning).
+            var appliedBoost = Math.Min(boostDelta, remainingToMorning);
+            __instance.SetNetTime(time + appliedBoost);
         }
     }
 }

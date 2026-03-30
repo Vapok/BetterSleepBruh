@@ -58,7 +58,7 @@ public sealed class SleepHudView : MonoBehaviour
             BetterSleepBruh.Log.Debug($"[CLIENT] Sleep Boost (extra rate × dt): {sleepBoost}");
         }
 
-        gameObject.SetActive(EnvMan.CanSleep());
+        gameObject.SetActive(true);
         Refresh(totalPlayers, playersSleeping);
     }
 

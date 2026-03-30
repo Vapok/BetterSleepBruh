@@ -17,6 +17,7 @@ namespace BetterSleepBruh.Configuration
         public static ConfigEntry<float> SleepStart;
         public static ConfigEntry<float> BonusMultiplier;
         public static ConfigEntry<float> BonusIncrementScale;
+        public static ConfigEntry<float> BoostFadeRealSecondsBeforeMorning;
 
 
         public ConfigRegistry(IPluginInfo mod, bool enableLockedConfigs = false): base(mod, enableLockedConfigs)
@@ -49,11 +50,18 @@ namespace BetterSleepBruh.Configuration
                     new AcceptableValueRange<float>(0f, 1f), 
                     new ConfigurationManagerAttributes { Order = 3, IsAdminOnly = true }),ref BonusMultiplier);
 
-            SyncedConfig("Server Settings", "Bonus Increment Scale", 10f,
+            SyncedConfig("Server Settings", "Bonus Increment Scale", 20f,
                 new ConfigDescription(
                     "Scales the bonus increment (added on top of normal time): extra rate = this × sleep fraction × 10. At 1.0 and all-but-one in bed, extra rate is 10 (time advances 11× vs vanilla dt alone).",
                     new AcceptableValueRange<float>(0f, 30f), 
                     new ConfigurationManagerAttributes { Order = 4, IsAdminOnly = true }),ref BonusIncrementScale);
+
+            SyncedConfig("Server Settings", "Boost Fade (Real Seconds)", 3f,
+                new ConfigDescription(
+                    "Partial boost linearly ramps to zero over this many real-time seconds before the next morning. Uses net rate (1 + extra) so higher boost = longer game-time taper. 0 = no taper (hard cut only at morning).",
+                    new AcceptableValueRange<float>(0f, 30f),
+                    new ConfigurationManagerAttributes { Order = 5, IsAdminOnly = true }),
+                ref BoostFadeRealSecondsBeforeMorning);
 
             SyncedConfig("Testing Mode", "Enable Testing Mode", false,
                 new ConfigDescription(
