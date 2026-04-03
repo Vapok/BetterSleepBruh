@@ -25,7 +25,7 @@ namespace BetterSleepBruh
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "Better Sleep Bruh!";
-        private const string _version = "1.0.1";
+        private const string _version = "1.0.2";
         
         private SleepHudView _sleepHud;
         private int _sleepHudBuildAttempts;
@@ -186,18 +186,21 @@ namespace BetterSleepBruh
         
         private void Update()
         {
-            if (!Player.m_localPlayer || !ZNetScene.instance || Game.instance == null)
+            if (!Player.m_localPlayer || !ZNetScene.instance || !Game.instance)
                 return;
+            
+            if (!_sleepHud) return;
+            
+            if (EnvMan.CanSleep() && !_sleepHud.isActiveAndEnabled)
+                _sleepHud.gameObject.SetActive(EnvMan.CanSleep());
             
             _zNetHasStopped = ZNet.instance.HaveStopped;
 
             if (!_zNetHasStopped) return;
-            if (_sleepHud != null)
-            {
-                InvokeRepeating(nameof(WaitForZNet), 1f, 1f);
-                InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
-                _sleepHud = null;
-            }
+            
+            InvokeRepeating(nameof(WaitForZNet), 1f, 1f);
+            InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
+            _sleepHud = null;
         }
 
         public void InitializeModule(object send, EventArgs args)

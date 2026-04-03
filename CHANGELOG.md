@@ -1,5 +1,9 @@
 # Better Sleep _Bruh!_ Changelog
 
+### 1.0.2 - Client Gui Display Fix
+* Fixed: Sometimes the Better Sleep UI would not appear on initial load and then never appear.
+* Note: This mod does NOT require connect clients to install the mod. But if they want the user interface, the mod must be installed client side.
+  * All functions of sleep are managed on the server and controlled through vanilla actions.
 
 ### 1.0.1 - Bug Fixes and Sleep Calculation Refactor
 * Refactored Sleep Calculations

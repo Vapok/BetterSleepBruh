@@ -132,10 +132,6 @@ public class SleepTracker : MonoBehaviour
 
         CanSleep = EnvMan.CanSleep();
 
-        BetterSleepBruh.Log.Info($"[SERVER] CanSleep: {CanSleep}");
-        BetterSleepBruh.Log.Info($"[SERVER] lastCanSleep: {_lastCanSleep}");
-        BetterSleepBruh.Log.Info($"[SERVER] EnvMan IsTimeSkipping: {EnvMan.instance != null && EnvMan.instance.IsTimeSkipping()}");
-
         if (CanSleep)
             BroadcastSleepingInfoNow();
 

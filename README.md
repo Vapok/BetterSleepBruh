@@ -4,7 +4,7 @@ Get Better Sleep, _Bruh!_ No longer do you have to ask "Are you near a bed, bruh
 
 Simply jump in a bed and sleep. Depending on how many people are on the server, you can increase the speed that night passes without everyone in the bed by up to 60%.  This allows even just one person on a server of 10, feel like they are helping sleep the night away.
 
-**INSTALLATION:** This is a **server side** and **client side** mod. All users will need to have this mod installed as well as any dedicated servers in order for it to work.
+**INSTALLATION:** This is a **server side** (required) and **client side** (optional) mod. Must be installed on servers in order for it to work, for user interface, install on clients as well.
 
 ### Current Patch Notes
 [Github Patchnotes](https://github.com/Vapok/BetterSleepBruh/blob/main/PATCHNOTES.md)
