@@ -1,5 +1,9 @@
 # Better Sleep _Bruh!_ Changelog
 
+## 2.0.0 - Updating for Valheim 1.0+
+* Updated Code base with changes needed for Valheim 1.0
+* Looking for feedback on dedicated servers. Testing was limited.
+
 ### 1.0.2 - Client Gui Display Fix
 * Fixed: Sometimes the Better Sleep UI would not appear on initial load and then never appear.
 * Note: This mod does NOT require connect clients to install the mod. But if they want the user interface, the mod must be installed client side.

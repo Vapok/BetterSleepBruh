@@ -79,15 +79,17 @@ public sealed class SleepHudView : MonoBehaviour
 
         BetterSleepBruh.Log.Debug($"[CLIENT] Stop Sleep");
 
-        var player = Player.m_localPlayer;
-        
-        player.SetSleeping(false);
-        
-        if (player.InBed())
+        if (EnvMan.instance == null || !EnvMan.instance.IsTimeSkipping())
         {
-            player.AttachStop();
+            var player = Player.m_localPlayer;
+            player.SetSleeping(false);
+            if (player.InBed())
+            {
+                player.AttachStop();
+            }
+            player.m_wakeupTime = ZNet.instance != null ? ZNet.instance.GetTimeSeconds() : 0.0;
         }
-        
+
         gameObject.SetActive(false);
     }
 
@@ -384,7 +386,7 @@ public sealed class SleepHudView : MonoBehaviour
         le.preferredHeight = -1f;
         le.flexibleHeight = 1f;
 
-        var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+        var labelGo = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
         var labelRt = (RectTransform)labelGo.transform;
         labelRt.SetParent(wrapRt, false);
         StretchFull(labelRt);
