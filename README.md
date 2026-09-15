@@ -1,40 +1,99 @@
-# Better Sleep _Bruh!_ by Vapok
+<div align="center">
 
-Get Better Sleep, _Bruh!_ No longer do you have to ask "Are you near a bed, bruh?", with BetterSleepBruh by Vapok, you can now quickly sleep the night away, even if your night owl friends aren't near a bed.
+# 🛏️ Better Sleep *Bruh!*
 
-Simply jump in a bed and sleep. Depending on how many people are on the server, you can increase the speed that night passes without everyone in the bed by up to 60%.  This allows even just one person on a server of 10, feel like they are helping sleep the night away.
+### *Dynamic sleep acceleration and multiplayer time progression for Valheim.*
 
-**INSTALLATION:** This is a **server side** (required) and **client side** (optional) mod. Must be installed on servers in order for it to work, for user interface, install on clients as well.
+[![GitHub Release](https://img.shields.io/github/v/release/Vapok/BetterSleepBruh?include_prereleases&logo=github&style=for-the-badge)](https://github.com/Vapok/BetterSleepBruh/releases)
+[![Thunderstore Version](https://img.shields.io/thunderstore/v/Vapok/BetterSleepBruh?logo=thunderstore&style=for-the-badge)](https://thunderstore.io/c/valheim/p/Vapok/BetterSleepBruh/)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Community-7289da?logo=discord&logoColor=white&style=for-the-badge)](https://discord.gg/5YAJkRFBXt)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-### Current Patch Notes
-[Github Patchnotes](https://github.com/Vapok/BetterSleepBruh/blob/main/PATCHNOTES.md)
+---
 
-### 1.0.0 - Better Sleep _Bruh!_ Initial Release
-Gone are the days of asking for everyone to run to a bed, or to log off, just to make night go away faster.  Get Better Sleep Bruh! The mod that allows players on a server help make night go faster without completely eliminating night. This allows players to still enjoy benefits of night but also not have to run to a bed to make morning come faster!
-* Provides the following Configurations:
-  * Adjusts when players are allowed to sleep.  Default vanilla is Noon.
-  * Adjust the maximum Bonus Multiplier provided when some players are sleeping.
-    * Here's an Example:
-      * Let's say you have 5 players on your server.  And Maximum Bonus Multiplier is 60% of the time speed if everyone was sleeping.
-        * If 5 players jump into bed, then you fall into a dark dream state and hope you can read your dream fast enough before it goes away.
-        * If 4 players are in bed, but one player is stuck on a boat, the Bonus Multipler of 60% is applied.
-        * If 3 players are in bed, but two players are stuck on a boat, the Bonus Multipler of 45% is applied.
-        * If 2 players are in bed, but one player is stuck in a boat, one player is stuck in a mine, and another player is AFK, the Bonus Multiplier of 30% is applied.
-        * If 1 player are in  bed, and they've been abandoned by all of the other players who went AFK to look at TikTok video, the Bonus Multiplier of 15% is applied.
-        * If 0 players are in bed, night passes like normally, with no speed bonus, and clearly no dreams.  You'll be tired tomorrow. I'm sure of it.
-    * If you've ever played Enshrouded and wished "Man, I wish I could sleep like in Enshrouded!" This mod is for you.
-* Pillow Icons are displayed for each player on the server.  As players jump into bed, pillows highlight showing you the number of players in bed.
-  * To be clear, this not been tested on very large servers.  So if you complain about why this doesn't work with 100 players, I'm just going to wrinkle my eyebrow at you.
+</div>
 
-### Mod Author Details
-![Vapok Gaming](https://avatars.githubusercontent.com/u/1264136?s=180&v=4)
+Gone are the days of yelling in chat for everyone to sprint to bed or log off just to make the dark, perilous night pass. **Better Sleep Bruh!** introduces dynamic time acceleration to Valheim: the more players resting in bed on a multiplayer server, the faster night ticks away!
 
-Author: [Vapok](https://github.com/Vapok)
+---
 
-Source: [Github](https://github.com/Vapok/BetterSleepBruh)
+## 🌙 How It Works
 
-Discord: [Vapok's Mod's Community](https://discord.gg/5YAJkRFBXt)
+* 💤 **Proportional Acceleration**: Nighttime automatically accelerates proportionally to the percentage of players currently sleeping in beds.
+* 🛌 **No 100% Requirement**: If some players are out sailing on a longship, mining in a crypt, or AFK, players back at base can still sleep to significantly speed up the night.
+* 🪶 **On-Screen Pillow HUD**: An intuitive on-screen HUD displays pillow icons for all connected players, lighting up in real time as Vikings tuck themselves into bed.
+* 🌅 **Smooth Morning Ramp-Down**: Time speed smoothly transitions back to 1x as dawn approaches so you never get jolted awake.
 
-Patch notes: [Thunderstore Changelog](https://thunderstore.io/c/valheim/p/Vapok/BetterSleepBruh/changelog/)
+### 📊 Sleep Speed Example
 
+| Players Connected | Players in Bed | Active Speed Bonus | Nighttime Experience |
+| :---: | :---: | :---: | :--- |
+| **5** | **5 (100%)** | **100%** | Full vanilla dream state; instant skip to morning. |
+| **5** | **4 (80%)** | **80%** | Blazing-fast night progression. |
+| **5** | **3 (60%)** | **60%** | Fast night acceleration while miners/sailors continue working. |
+| **5** | **1 (20%)** | **20%** | Noticeable time speedup for the solo sleeper. |
+| **5** | **0 (0%)** | **0%** | Normal vanilla passage of time. |
 
+---
+
+## ⚙️ Configuration & Settings
+
+Configure via the in-game [BepInEx Configuration Manager](https://github.com/BepInEx/BepInEx.ConfigurationManager) (<kbd>F1</kbd>) or in `BetterSleepBruh.cfg`:
+
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| **Sleep Start Hour** | `12.0` *(Noon)* | Earliest in-game time of day when players are permitted to sleep. |
+| **Bonus Increment Scale** | `20x` | Multiplier scaling the speed bonus per sleeping player. |
+| **Boost Fade Duration** | `3.0s` | Seconds before morning when time acceleration ramps down to standard speed. |
+| **Use Vanilla Start Sleep** | `false` | When enabled, enforces standard vanilla nighttime sleep eligibility checks. |
+| **Enable Testing Mode** | `false` | Developer testing mode to simulate connected and sleeping players. |
+
+---
+
+## 🛡️ Advanced Safeguards
+
+* 🖥️ **Server-Driven Operation**: Time calculations run strictly on the server. Clients do not need the mod installed to benefit from sleep acceleration (the client mod is only required for the on-screen Pillow HUD).
+* 🔄 **Smooth Environment Sync**: Weather, skybox lighting, and day counters transition smoothly across all clients without stutter or desync.
+* 🌐 **ServerSync Enforced**: Configuration parameters are managed by server admins and synced to all clients automatically.
+
+---
+
+## 🤝 Verified Mod Compatibility
+
+<div align="center">
+
+| Mod | Compatibility Status |
+| :--- | :--- |
+| **AdventureBackpacks** | 🟢 Fully Supported |
+| **NoFogBruh** | 🟢 Fully Supported |
+| **Valheim Plus** | 🟢 Fully Supported |
+| **Jotunn / JVL Mods** | 🟢 Fully Supported |
+
+</div>
+
+---
+
+## 📥 Installation & Server Setup
+
+### Mod Manager (Recommended)
+1. Install via **R2ModMan** or **Thunderstore Mod Manager**.
+2. Dependencies (`BepInExPack`, `Jotunn (JVL)`) are installed automatically.
+
+### Dedicated Servers
+* **Server Installation**: Place the DLL on the dedicated server to enable sleep acceleration for all players.
+* **Client Installation (Optional)**: Recommended for players who want to see the visual on-screen Pillow HUD.
+
+---
+
+<div align="center">
+
+### 👨‍💻 Created by Vapok Gaming
+
+[![Vapok Gaming](https://avatars.githubusercontent.com/u/1264136?s=120&v=4)](https://github.com/Vapok)
+
+**Author**: [Vapok](https://github.com/Vapok)  
+**Source Code**: [GitHub Repository](https://github.com/Vapok/BetterSleepBruh)  
+**Community & Support**: [Discord Server](https://discord.gg/5YAJkRFBXt)  
+**Changelog**: [Release Notes](https://github.com/Vapok/BetterSleepBruh/blob/main/CHANGELOG.md)
+
+</div>
