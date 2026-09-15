@@ -27,7 +27,7 @@ public class SleepTracker : MonoBehaviour
         return zdo.GetBool(ZDOVars.s_inBed);
     }
 
-    private static void GetSleepOccupancyCounts(out int playerCount, out int playersSleeping)
+    public static void GetSleepOccupancyCounts(out int playerCount, out int playersSleeping)
     {
         playerCount = 0;
         playersSleeping = 0;
@@ -135,11 +135,16 @@ public class SleepTracker : MonoBehaviour
         if (CanSleep)
             BroadcastSleepingInfoNow();
 
-        if (CanSleep & !_lastCanSleep)
+        if (CanSleep && !_lastCanSleep)
             ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StartSleep");
 
-        if (!CanSleep & _lastCanSleep)
-            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StopSleep");
+        if (!CanSleep && _lastCanSleep)
+        {
+            if (EnvMan.instance == null || !EnvMan.instance.IsTimeSkipping())
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StopSleep");
+            }
+        }
 
         _lastCanSleep = CanSleep;
     }

@@ -10,16 +10,40 @@ public class EnvManPatches
     {
         static bool Prefix(EnvMan __instance, ref bool __result)
         {
-            if (ConfigRegistry.UseVanilleSleep.Value)
+            if (ConfigRegistry.UseVanilleSleep != null && ConfigRegistry.UseVanilleSleep.Value)
                 return true;
             
-            var dayFraction = __instance.GetDayFraction();
-            var sleepStart = ConfigRegistry.SleepStart.Value;
-            if (sleepStart < 0.25f)
-                __result = dayFraction < 0.25f && dayFraction >= sleepStart;
-            else
-                __result = dayFraction >= sleepStart || dayFraction < 0.25f;
+            if (__instance.IsTimeSkipping())
+            {
+                __result = false;
+                return false;
+            }
 
+            var dayFraction = __instance.GetDayFraction();
+            var sleepStart = ConfigRegistry.SleepStart != null ? ConfigRegistry.SleepStart.Value : 0.5f;
+            bool inSleepWindow;
+            if (sleepStart < 0.25f)
+                inSleepWindow = dayFraction < 0.25f && dayFraction >= sleepStart;
+            else
+                inSleepWindow = dayFraction >= sleepStart || dayFraction < 0.25f;
+
+            if (!inSleepWindow)
+            {
+                __result = false;
+                return false;
+            }
+
+            var localPlayer = Player.m_localPlayer;
+            if (localPlayer != null && ZNet.instance != null)
+            {
+                if (ZNet.instance.GetTimeSeconds() <= localPlayer.m_wakeupTime + __instance.m_sleepCooldownSeconds)
+                {
+                    __result = false;
+                    return false;
+                }
+            }
+
+            __result = true;
             return false;
         }
     }
