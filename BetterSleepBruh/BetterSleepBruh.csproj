@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <!-- Jotunn refs use $(VALHEIM_MANAGED); set when using extracted Managed DLLs (no Valheim_Data folder). -->
     <Import Project="..\packages\JotunnLib.2.30.0\build\JotunnLib.props" Condition="Exists('..\packages\JotunnLib.2.30.0\build\JotunnLib.props')" />
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
     <PropertyGroup>
         <VALHEIM_MANAGED Condition="'$(VALHEIM_MANAGED)' == ''">$(MSBuildProjectDirectory)\$(ReferencesRoot)\Valheim\1.0.12\Managed</VALHEIM_MANAGED>
     </PropertyGroup>
