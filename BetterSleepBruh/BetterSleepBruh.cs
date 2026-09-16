@@ -13,6 +13,7 @@ using Vapok.Common.Abstractions;
 using Vapok.Common.Managers;
 using Vapok.Common.Managers.Configuration;
 using Vapok.Common.Managers.LocalizationManager;
+using Vapok.Common.Managers.Splash;
 
 namespace BetterSleepBruh
 {
@@ -24,9 +25,10 @@ namespace BetterSleepBruh
     {
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
-        private const string _displayName = "Better Sleep Bruh!";
-        private const string _version = "2.0.1";
+        private const string _displayName = "BetterSleepBruh";
+        private const string _version = "2.0.2";
         
+        //Class Features
         private SleepHudView _sleepHud;
         private int _sleepHudBuildAttempts;
         private bool _zNetHasStopped;
@@ -77,6 +79,13 @@ namespace BetterSleepBruh
             _harmony = new Harmony(Info.Metadata.GUID);
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
 
+            //Register Mod Splash Screen
+            ModSplashManager.Register(new ModSplashDossier(_instance)
+            {
+                Tagline = "Sleep mechanics inspired by Enshrouded allowing fast time progression without requiring all players in bed.",
+                ShowOnStartup = ConfigRegistry.ShowSplashOnStartup,
+                EnableTelemetry = ConfigRegistry.EnableTelemetry,
+            });
 
             //???
 
