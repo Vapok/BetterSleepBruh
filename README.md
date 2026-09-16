@@ -23,7 +23,7 @@ Gone are the days of yelling in chat for everyone to sprint to bed or log off ju
 
 <br>
 
-[![Survival Servers](https://raw.githubusercontent.com/Vapok/BetterSleepBruh/refs/heads/main/images/survivalservers_banner.png)](https://www.survivalservers.com/services/game_servers/valheim/?ref=vapok)
+[![Survival Servers](https://raw.githubusercontent.com/Vapok/BetterSleepBruh/main/images/survivalservers_banner.png)](https://www.survivalservers.com/services/game_servers/valheim/?ref=vapok)
 
 </div>
 
