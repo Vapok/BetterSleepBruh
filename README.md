@@ -4,7 +4,7 @@
 
 ### *Dynamic sleep acceleration and multiplayer time progression for Valheim.*
 
-[![Survival Servers](https://raw.githubusercontent.com/Vapok/BetterSleepBruh/refs/heads/main/images/survivalservers_banner.png)](https://www.survivalservers.com/services/game_servers/valheim/?ref=vapok)
+[![Survival Servers](https://ibin.co/5RCcxHBNFp)](https://www.survivalservers.com/services/game_servers/valheim/?ref=vapok)
 
 [![GitHub Release](https://img.shields.io/github/v/release/Vapok/BetterSleepBruh?include_prereleases&logo=github&style=for-the-badge)](https://github.com/Vapok/BetterSleepBruh/releases)
 [![Thunderstore Version](https://img.shields.io/thunderstore/v/Vapok/BetterSleepBruh?logo=thunderstore&style=for-the-badge)](https://thunderstore.io/c/valheim/p/Vapok/BetterSleepBruh/)
