@@ -1,3 +1,12 @@
+# 2.0.7 - Dedicated Server Sleep Tracking Hardening & Valheim 1.0.15 Alignment
+* **SleepTracker & GamePatches Null Safety**:
+  * In `Game.cs` (`UpdateSleepingPatch.Prefix`), guarded `ZRoutedRpc.instance?.InvokeRoutedRPC(...)` against null instances when `SleepStop` or `SleepStart` RPCs trigger.
+  * In `SleepTracker.cs`, added null and validity checks for character `ZDO` instances in `IsCharacterInBedForBoost` and `GetSleepOccupancyCounts`.
+  * Added null-conditional invocation for all `ZRoutedRpc.instance` registrations and RPC dispatches in `SleepTracker`.
+* **Valheim 1.0.15 Game Reference Alignment**:
+  * Updated game assembly bindings to target Valheim `1.0.15`.
+  * Internalized `Vapok.Valheim.Common` v3.13.1015.
+
 # 2.0.6 - Splash Window Updates & Valheim 1.0.14 Alignment
 * **Splash Window Updates**:
   * Updated telemetry default to unchecked on first launch (Opt-In).

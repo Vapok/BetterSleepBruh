@@ -23,7 +23,7 @@ public class GamePatches
                 if (!EnvMan.instance.IsTimeSkipping())
                 {
                     __instance.m_sleeping = false;
-                    ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStop", Array.Empty<object>());
+                    ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStop", Array.Empty<object>());
                 }
                 return false;
             }
@@ -36,7 +36,7 @@ public class GamePatches
             if (playerCount > 0 && playersSleeping >= playerCount)
             {
                 __instance.m_sleeping = true;
-                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStart", Array.Empty<object>());
+                ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStart", Array.Empty<object>());
                 EnvMan.instance.SkipToMorning();
             }
 

@@ -24,7 +24,7 @@ public class SleepTracker : MonoBehaviour
      ******************/
     private static bool IsCharacterInBedForBoost(ZDO zdo)
     {
-        return zdo.GetBool(ZDOVars.s_inBed);
+        return zdo != null && zdo.IsValid() && zdo.GetBool(ZDOVars.s_inBed);
     }
 
     public static void GetSleepOccupancyCounts(out int playerCount, out int playersSleeping)
@@ -37,14 +37,17 @@ public class SleepTracker : MonoBehaviour
 
         var zdos = znet.GetAllCharacterZDOS();
         var sessionPlayers = znet.GetNrOfPlayers();
-        var realTotal = System.Math.Max(zdos.Count, sessionPlayers);
+        var realTotal = System.Math.Max(zdos?.Count ?? 0, sessionPlayers);
         playerCount = ConfigRegistry.GetEffectiveTotalPlayersForMod(realTotal);
 
         var realSleeping = 0;
-        foreach (var z in zdos)
+        if (zdos != null)
         {
-            if (IsCharacterInBedForBoost(z))
-                realSleeping++;
+            foreach (var z in zdos)
+            {
+                if (z != null && IsCharacterInBedForBoost(z))
+                    realSleeping++;
+            }
         }
 
         playersSleeping = ConfigRegistry.GetEffectiveSleepingPlayersForMod(realSleeping, playerCount);
@@ -136,13 +139,13 @@ public class SleepTracker : MonoBehaviour
             BroadcastSleepingInfoNow();
 
         if (CanSleep && !_lastCanSleep)
-            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StartSleep");
+            ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StartSleep");
 
         if (!CanSleep && _lastCanSleep)
         {
             if (EnvMan.instance == null || !EnvMan.instance.IsTimeSkipping())
             {
-                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StopSleep");
+                ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StopSleep");
             }
         }
 
@@ -177,7 +180,7 @@ public class SleepTracker : MonoBehaviour
         else
             BetterSleepBruh.Log.Debug($"[SERVER] Player Sleeping Info: Players on Server: {playersOnServer} Players Sleeping: {playersSleeping} Extra rate: {boost}");
 
-        ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,
+        ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody,
             "RPC_SleepingPlayerInfo",
             playersOnServer,
             playersSleeping,
