@@ -1,6 +1,6 @@
-# 2.0.8 - Internalized Library & Dependency Updates
-* **Library Updates**: Updated internalized `Vapok.Valheim.Common` to 3.17.1015 and `Jotunn` to 2.30.2.
-* **Code Maintenance**: Refactored internal variable declarations to adhere to workspace engineering standards.
+# 2.0.8 - Dependency Updates & Code Maintenance
+* **Dependency Updates**: Updated Jotunn to 2.30.2 and internal dependencies for stability.
+* **Code Maintenance**: Refactored internal code to adhere to workspace engineering standards.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
