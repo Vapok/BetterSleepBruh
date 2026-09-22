@@ -1,9 +1,13 @@
-# 2.0.7 - Dedicated Server Sleep Tracking Hardening & Valheim 1.0.15 Alignment
-* **Dedicated Server Sleep Tracking Hardening**: Added null-safety checks across `ZRoutedRpc.instance` calls and character ZDO bed occupancy checks, preventing `NullReferenceException` crashes on dedicated servers during sleep cycles and time-skip transitions.
-* **Valheim 1.0.15 Alignment**: Updated all game assembly references and internalized `Vapok.Valheim.Common` 3.13.1015.
+# 2.0.8 - Internalized Library & Dependency Updates
+* **Library Updates**: Updated internalized `Vapok.Valheim.Common` to 3.17.1015 and `Jotunn` to 2.30.2.
+* **Code Maintenance**: Refactored internal variable declarations to adhere to workspace engineering standards.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
+
+### 2.0.7 - Dedicated Server Sleep Tracking Hardening & Valheim 1.0.15 Alignment
+* **Dedicated Server Sleep Tracking Hardening**: Added null-safety checks across `ZRoutedRpc.instance` calls and character ZDO bed occupancy checks, preventing `NullReferenceException` crashes on dedicated servers during sleep cycles and time-skip transitions.
+* **Valheim 1.0.15 Alignment**: Updated all game assembly references and internalized `Vapok.Valheim.Common` 3.13.1015.
 
 ### 2.0.6 - Splash Window Updates & Valheim 1.0.14 Alignment
 * **Splash Window Updates**:

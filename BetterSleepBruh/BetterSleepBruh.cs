@@ -26,7 +26,7 @@ namespace BetterSleepBruh
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "BetterSleepBruh";
-        private const string _version = "2.0.7";
+        private const string _version = "2.0.8";
         
         //Class Features
         private SleepHudView _sleepHud;
@@ -62,7 +62,7 @@ namespace BetterSleepBruh
             Waiter = new Waiting();
             
             //Jotunn Localization
-            var localization = Jotunn.Managers.LocalizationManager.Instance.GetLocalization();
+            Jotunn.Entities.CustomLocalization localization = Jotunn.Managers.LocalizationManager.Instance.GetLocalization();
 
             //Register Logger
             LogManager.Init(PluginId,out _log);
@@ -161,21 +161,21 @@ namespace BetterSleepBruh
 
         private void BuildSleepGui()
         {
-            var goGameMain = GameObject.Find("_GameMain");
+            GameObject goGameMain = GameObject.Find("_GameMain");
             if (goGameMain == null)
             {
                 Log.Debug($"[GuiBuild] Can't Find _GameMain");
                 return;
             }
             
-            var goHud = goGameMain.transform.Find("LoadingGUI/PixelFix/IngameGui/HUD/hudroot");
+            Transform goHud = goGameMain.transform.Find("LoadingGUI/PixelFix/IngameGui/HUD/hudroot");
             if (goHud == null)
             {
                 Log.Debug($"[GuiBuild] Can't Find HUD");
                 return;
             }
 
-            var goMiniMap = goHud.Find("MiniMap/small");
+            Transform goMiniMap = goHud.Find("MiniMap/small");
             if (goMiniMap == null)
             {
                 Log.Debug($"[GuiBuild] Can't Find Minimap");
@@ -200,7 +200,7 @@ namespace BetterSleepBruh
             
             if (!_sleepHud) return;
             
-            var canSleep = EnvMan.CanSleep();
+            bool canSleep = EnvMan.CanSleep();
             if (canSleep != _sleepHud.gameObject.activeSelf)
                 _sleepHud.gameObject.SetActive(canSleep);
             

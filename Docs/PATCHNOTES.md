@@ -1,3 +1,10 @@
+# 2.0.8 - Internalized Library & Dependency Updates
+* **Dependency Updates**:
+  * Updated internalized `Vapok.Valheim.Common` to 3.17.1015.
+  * Updated `JotunnLib` dependency to 2.30.2.
+* **Code Cleanliness**:
+  * Replaced lazy `var` declarations with explicit types across mod startup and UI construction.
+
 # 2.0.7 - Dedicated Server Sleep Tracking Hardening & Valheim 1.0.15 Alignment
 * **SleepTracker & GamePatches Null Safety**:
   * In `Game.cs` (`UpdateSleepingPatch.Prefix`), guarded `ZRoutedRpc.instance?.InvokeRoutedRPC(...)` against null instances when `SleepStop` or `SleepStart` RPCs trigger.
