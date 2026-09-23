@@ -1,6 +1,6 @@
 # 2.0.8 - Internalized Library & Dependency Updates
 * **Dependency Updates**:
-  * Updated internalized `Vapok.Valheim.Common` to 3.17.1015.
+  * Updated internalized `Vapok.Valheim.Common` to 3.19.1015.
   * Updated `JotunnLib` dependency to 2.30.2.
 * **Code Cleanliness**:
   * Replaced lazy `var` declarations with explicit types across mod startup and UI construction.
