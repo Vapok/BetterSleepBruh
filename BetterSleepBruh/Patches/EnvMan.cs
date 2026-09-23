@@ -1,14 +1,14 @@
-﻿using BetterSleepBruh.Configuration;
+using BetterSleepBruh.Configuration;
 using HarmonyLib;
 
 namespace BetterSleepBruh.Patches;
 
-public class EnvManPatches
+internal static class EnvManPatches
 {
     [HarmonyPatch(typeof(EnvMan), nameof(EnvMan.CalculateCanSleep))]
-    static class CalculateCanSleepPatch
+    private static class CalculateCanSleepPatch
     {
-        static bool Prefix(EnvMan __instance, ref bool __result)
+        private static bool Prefix(EnvMan __instance, ref bool __result)
         {
             if (ConfigRegistry.UseVanilleSleep != null && ConfigRegistry.UseVanilleSleep.Value)
                 return true;
@@ -19,8 +19,8 @@ public class EnvManPatches
                 return false;
             }
 
-            var dayFraction = __instance.GetDayFraction();
-            var sleepStart = ConfigRegistry.SleepStart != null ? ConfigRegistry.SleepStart.Value : 0.5f;
+            float dayFraction = __instance.GetDayFraction();
+            float sleepStart = ConfigRegistry.SleepStart != null ? ConfigRegistry.SleepStart.Value : 0.5f;
             bool inSleepWindow;
             if (sleepStart < 0.25f)
                 inSleepWindow = dayFraction < 0.25f && dayFraction >= sleepStart;
@@ -33,7 +33,7 @@ public class EnvManPatches
                 return false;
             }
 
-            var localPlayer = Player.m_localPlayer;
+            Player localPlayer = Player.m_localPlayer;
             if (localPlayer != null && ZNet.instance != null)
             {
                 if (ZNet.instance.GetTimeSeconds() <= localPlayer.m_wakeupTime + __instance.m_sleepCooldownSeconds)

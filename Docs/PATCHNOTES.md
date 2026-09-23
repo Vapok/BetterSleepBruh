@@ -1,3 +1,21 @@
+# 2.0.9 - Performance Optimizations & Time Sync Smoothness
+* **Bed Occupancy Hook Refactor (`PlayerPatches.cs`)**:
+  * Replaced universal `ZDO.Set(int, bool)` hook with surgical postfixes on `Player.AttachStart` and `Player.AttachStop` to trigger occupancy recalculation only when players interact with beds.
+* **Server Performance & RPC Hardening (`SleepTracker.cs`)**:
+  * Eliminated per-frame / 50Hz polling of `GetAllCharacterZDOS()`. Caches occupancy metrics and recalculates strictly on bed transition events and a 1-second server update tick.
+  * Replaced unconditional 1-second `RPC_SleepingPlayerInfo` broadcasts with state-change-driven broadcasts and a 3-second heartbeat fallback.
+  * Hardened `NotifyBedOccupancyChanged` and `RPC_RequestSleepingPlayerInfo` endpoints by validating sender peer IDs and rate-limiting incoming requests to prevent packet spam.
+  * Changed client occupancy notifications and initial state queries to unicast directly to the server peer ID (`ZRoutedRpc.instance.GetServerPeerID()`) instead of broadcasting across all peers.
+* **Network Time Peer Synchronization (`ZNetPatches.cs`)**:
+  * Implemented 0.25-second active peer `NetTime` broadcast during partial sleep time acceleration, preventing 2-second client time snap-backs.
+* **UI Stability & Sentry Fixes (`SleepHudView.cs`)**:
+  * Resolved `BETTERSLEEPBRUH-4` by guarding `_segmentsRoot` against null in `Refresh()` and `EnsureSegments()` prior to full hierarchy construction.
+  * Resolved missing font warnings by assigning resolved font to `TMP_Settings.defaultFontAsset`.
+  * Removed lazy `var` keywords across UI creation methods in adherence to workspace engineering standards.
+  * Replaced all `?.` on `UnityEngine.Object` derived types with explicit `!= null` checks.
+* **Testing Mode Calculation (`ConfigRegistry.cs`)**:
+  * Changed testing mode simulation math to add fake players on top of real connected players rather than overriding them, allowing solo testers to act as the final sleeper and trigger `SkipToMorning()`.
+
 # 2.0.8 - Internalized Library & Dependency Updates
 * **Dependency Updates**:
   * Updated internalized `Vapok.Valheim.Common` to 3.19.1015.

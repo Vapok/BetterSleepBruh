@@ -67,20 +67,20 @@ namespace BetterSleepBruh.Configuration
 
             SyncedConfig("Testing Mode", "Enable Testing Mode", false,
                 new ConfigDescription(
-                    "When enabled, Fake Total Players and Simulate Players In Bed override real counts for boost math and HUD (server + RPC).",
+                    "When enabled, Fake Total Players and Simulate Players In Bed are added on top of real player counts for boost math and HUD (server + RPC).",
                     null,
                     new ConfigurationManagerAttributes { Order = 4, IsAdminOnly = true }),
                 ref TestingMode);
 
             SyncedConfig("Testing Mode", "Fake Total Players", 10,
                 new ConfigDescription(
-                    "Spoofed total player count while Testing Mode is on.",
-                    new AcceptableValueRange<int>(2, 80), 
+                    "Count of fake connected players to add to the server while Testing Mode is on.",
+                    new AcceptableValueRange<int>(0, 80), 
                     new ConfigurationManagerAttributes { Order = 5, IsAdminOnly = true }),ref TestingMaxPlayers);
 
             SyncedConfig("Testing Mode", "Simulate Players In Bed", 1,
                 new ConfigDescription(
-                    "Spoofed count of players in bed while Testing Mode is on (clamped to Fake Total Players).",
+                    "Count of fake players in bed to add while Testing Mode is on (clamped to Fake Total Players).",
                     new AcceptableValueRange<int>(0, 80), 
                     new ConfigurationManagerAttributes { Order = 6, IsAdminOnly = true}),ref TestingSleepingPlayers);
 
@@ -94,28 +94,24 @@ namespace BetterSleepBruh.Configuration
                     null, new ConfigurationManagerAttributes { Order = 5 }), ref EnableTelemetry);
         }
 
-        /*
-         * When TestingMode is enabled, returns TestingMaxPlayers; otherwise return realTotalPlayers/>.
-         * Use for all sleep occupancy totals (boost math, HUD broadcast).
-        */
-        
         public static int GetEffectiveTotalPlayersForMod(int realTotalPlayers)
         {
+            int total = Math.Max(0, realTotalPlayers);
             if (TestingMode != null && TestingMode.Value && TestingMaxPlayers != null)
-                return TestingMaxPlayers.Value;
-            return realTotalPlayers;
+                total += Math.Max(0, TestingMaxPlayers.Value);
+            return total;
         }
 
-        /*
-         * When TestingMode is enabled, returns TestingSleepingPlayers(clamped to
-         * effectivePlayerCount"); otherwise returns realSleepingCount clamped to that total.
-        */
         public static int GetEffectiveSleepingPlayersForMod(int realSleepingCount, int effectivePlayerCount)
         {
-            var maxSleep = effectivePlayerCount < 0 ? 0 : effectivePlayerCount;
+            int sleeping = Math.Max(0, realSleepingCount);
             if (TestingMode != null && TestingMode.Value && TestingSleepingPlayers != null)
-                return ClampInt(TestingSleepingPlayers.Value, 0, maxSleep);
-            return ClampInt(realSleepingCount, 0, maxSleep);
+            {
+                int maxFakeSleep = TestingMaxPlayers != null ? Math.Max(0, TestingMaxPlayers.Value) : 0;
+                int fakeSleeping = ClampInt(TestingSleepingPlayers.Value, 0, maxFakeSleep);
+                sleeping += fakeSleeping;
+            }
+            return ClampInt(sleeping, 0, effectivePlayerCount);
         }
 
         private static int ClampInt(int value, int min, int max)

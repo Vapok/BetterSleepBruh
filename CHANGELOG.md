@@ -1,13 +1,19 @@
-# 2.0.8 - Dependency Updates & Code Maintenance
-* **Dependency Updates**: Updated Jotunn to 2.30.2 and internal dependencies for stability.
-* **Code Maintenance**: Refactored internal code to adhere to workspace engineering standards.
+# 2.0.9 - Performance Optimizations & Time Sync Smoothness
+* **Nighttime Stutter Fix**: Fixed game stuttering when players get into bed by updating player counts only when players enter or leave bed instead of checking every game frame.
+* **Smoother Fast-Forward**: Network time is now synchronized more frequently during sleep acceleration to prevent sudden time jumps on multiplayer servers.
+* **Testing Mode Improvements**: Testing mode now properly adds simulated players to real player counts, making it easier to test sleep acceleration when playing alone.
+* **Display Improvements**: Cleaned up the sleep pillow display so it appears right away and doesn't show console warnings about fonts.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
 
+### 2.0.8 - Dependency Updates & Code Maintenance
+* **Dependency Updates**: Updated Jotunn to 2.30.2 and internal dependencies for stability.
+* **Code Maintenance**: Refactored internal code to adhere to workspace engineering standards.
+
 ### 2.0.7 - Dedicated Server Sleep Tracking Hardening & Valheim 1.0.15 Alignment
-* **Dedicated Server Sleep Tracking Hardening**: Added null-safety checks across `ZRoutedRpc.instance` calls and character ZDO bed occupancy checks, preventing `NullReferenceException` crashes on dedicated servers during sleep cycles and time-skip transitions.
-* **Valheim 1.0.15 Alignment**: Updated all game assembly references and internalized `Vapok.Valheim.Common` 3.13.1015.
+* **Dedicated Server Sleep Tracking Hardening**: Added null-safety checks across network calls and character bed occupancy checks, preventing crashes on dedicated servers during sleep cycles and time-skip transitions.
+* **Valheim 1.0.15 Alignment**: Updated all game assembly references for stability with the latest game patch.
 
 ### 2.0.6 - Splash Window Updates & Valheim 1.0.14 Alignment
 * **Splash Window Updates**:
@@ -15,11 +21,11 @@
   * Added Send Error Logs (Opt-Out)
   * Privacy Policy is now available directly in-game
   * Added Data Disclaimers on hover over checkboxes for transparency on what data is sent
-* **Valheim 1.0.14 Alignment**: Updated game assembly references and internalized  3.12.1014.
-
+* **Valheim 1.0.14 Alignment**: Updated game assembly references for Valheim 1.0.14.
 
 ### 2.0.5 - Jewelcrafting Font Compatibility
-* Fixed: Jewelcrafting packages it's own font which was overriding part of a vanilla font, causing the Splash screen to appear blank.
+* Fixed: Jewelcrafting packages its own font which was overriding part of a vanilla font, causing the Splash screen to appear blank.
+
 ### 2.0.4 - Updated README with Telemetry Information
 * Updated the README.md with Anonymous Telemetry information per request of mod stores.
 
@@ -40,28 +46,5 @@
 * Updated codebase and game references for Valheim 1.0.
 * Modernized world time and sleep progression mechanics.
 * Improved dedicated server synchronization and stability.
-
-</details>
-
-<details>
-<summary><b>1.0 Changelog History (Valheim Early Access)</b> (<i>click to expand</i>)</summary>
-
-### 1.0.2 - Client GUI Display Fix
-* Fixed: Resolved issue where the Better Sleep UI would occasionally fail to appear on initial load.
-* Note: Server-side sleep mechanics function automatically; the client mod is only required if players want to view the pillow HUD display.
-
-### 1.0.1 - Bug Fixes and Sleep Calculation Refactor
-* Refactored sleep speed and time progression calculations.
-* Added "Use Vanilla Start Sleep" configuration toggle.
-* Added configurable Bonus Increment Scale and Boost Fade settings for smooth morning ramp-downs.
-* Added server testing simulation configuration options.
-* Fixed: Resolved player count calculation issues affecting bonus percentages.
-* Fixed: Fixed mod state reload upon character logout.
-
-### 1.0.0 - Better Sleep Bruh! Initial Release
-* Initial release of dynamic sleep acceleration and time progression.
-* Proportionally accelerates nighttime based on the percentage of players currently in bed.
-* Added onscreen Pillow HUD indicator showing active sleeping players.
-* Added configurable sleep start times and maximum bonus multipliers.
 
 </details>

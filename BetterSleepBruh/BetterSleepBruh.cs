@@ -26,7 +26,7 @@ namespace BetterSleepBruh
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "BetterSleepBruh";
-        private const string _version = "2.0.8";
+        private const string _version = "2.0.9";
         
         //Class Features
         private SleepHudView _sleepHud;
@@ -131,8 +131,8 @@ namespace BetterSleepBruh
             }
 
             Log.Debug($"[GuiBuild] Checking for Server...");
-            // No need to build the UI if this if this is a dedicated server
-            if (ZNet.instance != null && ZNet.instance.IsDedicated())
+            // No need to build the UI if this is a dedicated server or headless
+            if (Jotunn.Managers.GUIManager.IsHeadless() || (ZNet.instance != null && ZNet.instance.IsDedicated()))
             {
                 CancelInvoke(nameof(TryBuildSleepHud));
                 return;
@@ -195,7 +195,7 @@ namespace BetterSleepBruh
         
         private void Update()
         {
-            if (!Player.m_localPlayer || !ZNetScene.instance || !Game.instance)
+            if (!Player.m_localPlayer || !ZNetScene.instance || !Game.instance || ZNet.instance == null)
                 return;
             
             if (!_sleepHud) return;

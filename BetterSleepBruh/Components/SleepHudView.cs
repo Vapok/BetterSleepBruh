@@ -21,6 +21,8 @@ public sealed class SleepHudView : MonoBehaviour
     private TextMeshProUGUI _ratioTmp;
     private TMP_FontAsset _hudFont;
     private int _lastTotal = -1;
+    private int _lastRefreshedTotal = -1;
+    private int _lastRefreshedSleeping = -1;
     private bool _compactLayout;
 
     private static readonly Color BgMidnight = new(0f, 0f, 0f, 0.39f);
@@ -37,11 +39,32 @@ public sealed class SleepHudView : MonoBehaviour
 
     private void Start()
     {
-        BetterSleepBruh.Log.Debug($"SleepHudView Is Starting, registering RPC's");
-        ZRoutedRpc.instance.Register<int, int, double>("RPC_SleepingPlayerInfo", RPC_SleepingPlayerInfo);
-        ZRoutedRpc.instance.Register("RPC_StartSleep", RPC_StartSleep);
-        ZRoutedRpc.instance.Register("RPC_StopSleep", RPC_StopSleep);
+        BetterSleepBruh.Log.Debug("[CLIENT] SleepHudView Is Starting, registering RPC's");
+        if (ZRoutedRpc.instance != null)
+        {
+            ZRoutedRpc.instance.Register<int, int, double>("RPC_SleepingPlayerInfo", RPC_SleepingPlayerInfo);
+            ZRoutedRpc.instance.Register("RPC_StartSleep", RPC_StartSleep);
+            ZRoutedRpc.instance.Register("RPC_StopSleep", RPC_StopSleep);
+        }
 
+        RequestOrSyncInitialState();
+    }
+
+    private void OnEnable()
+    {
+        RequestOrSyncInitialState();
+    }
+
+    private void RequestOrSyncInitialState()
+    {
+        if (SleepTracker.Instance != null && SleepTracker.CurrentPlayerCount > 0)
+        {
+            Refresh(SleepTracker.CurrentPlayerCount, SleepTracker.CurrentSleepingCount);
+        }
+        else if (ZRoutedRpc.instance != null)
+        {
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), "RPC_RequestSleepingPlayerInfo");
+        }
     }
 
     private void RPC_SleepingPlayerInfo(long sender, int totalPlayers, int playersSleeping, double sleepBoost)
@@ -81,13 +104,16 @@ public sealed class SleepHudView : MonoBehaviour
 
         if (EnvMan.instance == null || !EnvMan.instance.IsTimeSkipping())
         {
-            var player = Player.m_localPlayer;
-            player.SetSleeping(false);
-            if (player.InBed())
+            Player player = Player.m_localPlayer;
+            if (player != null)
             {
-                player.AttachStop();
+                player.SetSleeping(false);
+                if (player.InBed())
+                {
+                    player.AttachStop();
+                }
+                player.m_wakeupTime = ZNet.instance != null ? ZNet.instance.GetTimeSeconds() : 0.0;
             }
-            player.m_wakeupTime = ZNet.instance != null ? ZNet.instance.GetTimeSeconds() : 0.0;
         }
 
         gameObject.SetActive(false);
@@ -98,19 +124,19 @@ public sealed class SleepHudView : MonoBehaviour
     {
         if (mapGeometryTransform == null)
             return null;
-        var map = mapGeometryTransform as RectTransform;
+        RectTransform map = mapGeometryTransform as RectTransform;
         if (map == null)
             return null;
 
-        var existing = map.Find("BetterSleepBruh_SleepHud");
+        Transform existing = map.Find("BetterSleepBruh_SleepHud");
         if (existing != null)
             Destroy(existing.gameObject);
 
-        var white = BaseWhiteSprite();
-        var stripHeight = StripHeightPx;
+        Sprite white = BaseWhiteSprite();
+        float stripHeight = StripHeightPx;
 
-        var rootGo = new GameObject("BetterSleepBruh_SleepHud", typeof(RectTransform), typeof(Image), typeof(SleepHudView));
-        var rt = rootGo.GetComponent<RectTransform>();
+        GameObject rootGo = new GameObject("BetterSleepBruh_SleepHud", typeof(RectTransform), typeof(Image), typeof(SleepHudView));
+        RectTransform rt = rootGo.GetComponent<RectTransform>();
         rt.SetParent(map, false);
         rt.SetAsLastSibling();
         rt.localScale = Vector3.one;
@@ -121,14 +147,14 @@ public sealed class SleepHudView : MonoBehaviour
         rt.sizeDelta = new Vector2(0f, stripHeight);
         rt.anchoredPosition = new Vector2(0f, -gapBelowMinimap);
 
-        var bg = rootGo.GetComponent<Image>();
+        Image bg = rootGo.GetComponent<Image>();
         bg.sprite = white;
         bg.type = Image.Type.Simple;
         bg.color = BgMidnight;
         bg.raycastTarget = false;
         rootGo.AddComponent<RectMask2D>();
 
-        var font = ResolveTmpFont(map);
+        TMP_FontAsset font = ResolveTmpFont(map);
         if (font == null)
         {
             BetterSleepBruh.Log.Warning("[SleepHud] No TMP font; not creating sleep HUD.");
@@ -136,14 +162,14 @@ public sealed class SleepHudView : MonoBehaviour
             return null;
         }
 
-        var view = rootGo.GetComponent<SleepHudView>();
+        SleepHudView view = rootGo.GetComponent<SleepHudView>();
         view.BuildContent(rootGo.GetComponent<RectTransform>(), font);
         return view;
     }
 
     public void Refresh(int totalPlayers, int playersSleeping)
     {
-        if (!isActiveAndEnabled)
+        if (_segmentsRoot == null)
             return;
 
         totalPlayers = Mathf.Max(0, totalPlayers);
@@ -155,35 +181,39 @@ public sealed class SleepHudView : MonoBehaviour
             if (_segments.Length == 1)
                 _segments[0].color = playersSleeping > 0 ? Color.white : PillowAwakeTint;
             if (_ratioTmp != null)
-                _ratioTmp.text = $"{playersSleeping}/{totalPlayers}";
+            {
+                string ratioText = $"{playersSleeping}/{totalPlayers}";
+                if (_ratioTmp.text != ratioText)
+                    _ratioTmp.text = ratioText;
+            }
         }
         else
         {
-            for (var i = 0; i < _segments.Length; i++)
-                _segments[i].color = i < playersSleeping ? Color.white : PillowAwakeTint;
+            if (totalPlayers != _lastRefreshedTotal || playersSleeping != _lastRefreshedSleeping)
+            {
+                for (int i = 0; i < _segments.Length; i++)
+                    _segments[i].color = i < playersSleeping ? Color.white : PillowAwakeTint;
+            }
         }
+
+        _lastRefreshedTotal = totalPlayers;
+        _lastRefreshedSleeping = playersSleeping;
 
         if (_boostTmp == null)
             return;
 
-        var pct = GetBonusLabelPercent(totalPlayers, playersSleeping);
-        if (pct <= 0.0001)
-            _boostTmp.text = "+0%";
-        else
-            _boostTmp.text = $"+{pct:F0}%";
+        double pct = GetBonusLabelPercent(totalPlayers, playersSleeping);
+        string newBoostText = pct <= 0.0001 ? "+0%" : $"+{pct:F0}%";
+        if (_boostTmp.text != newBoostText)
+            _boostTmp.text = newBoostText;
     }
 
-    /*
-    * Aligns with partial-sleep idea: max configured benefit when at least (total − 1) are in bed.
-    * Below that: linear in sleeping/total × BonusMultiplier × 100 (no ConfigRegistry.BonusIncrementScale).
-    */
     private static double GetBonusLabelPercent(int playerCount, int playersSleeping)
     {
         if (playerCount <= 1 || playersSleeping <= 0)
             return 0.0;
 
-        var maxPct = ConfigRegistry.BonusMultiplier.Value * 100.0;
-        // Same “all but one” cap as boost sleepFraction = sleeping / (total − 1) at 1.0 when sleeping == total − 1.
+        double maxPct = ConfigRegistry.BonusMultiplier.Value * 100.0;
         if (playersSleeping >= playerCount - 1)
             return maxPct;
 
@@ -194,11 +224,11 @@ public sealed class SleepHudView : MonoBehaviour
     {
         _hudFont = font;
 
-        var rowGo = new GameObject("Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-        var rowRt = (RectTransform)rowGo.transform;
+        GameObject rowGo = new GameObject("Row", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        RectTransform rowRt = (RectTransform)rowGo.transform;
         rowRt.SetParent(rootRt, false);
         StretchFull(rowRt);
-        var hlg = rowGo.GetComponent<HorizontalLayoutGroup>();
+        HorizontalLayoutGroup hlg = rowGo.GetComponent<HorizontalLayoutGroup>();
         hlg.padding = new RectOffset(4, 4, 3, 3);
         hlg.spacing = 4;
         hlg.childAlignment = TextAnchor.MiddleLeft;
@@ -210,15 +240,15 @@ public sealed class SleepHudView : MonoBehaviour
         CreateIconInRow(rowRt, "Moon", GetMoonIconSprite(), 28f, Color.white);
         CreateIconInRow(rowRt, "Bed", GetBedIconSprite(), 26f, Color.white);
 
-        var barGo = new GameObject("BarHost", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(Image));
-        var barRt = (RectTransform)barGo.transform;
+        GameObject barGo = new GameObject("BarHost", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(Image));
+        RectTransform barRt = (RectTransform)barGo.transform;
         barRt.SetParent(rowRt, false);
-        var barBg = barGo.GetComponent<Image>();
+        Image barBg = barGo.GetComponent<Image>();
         barBg.sprite = BaseWhiteSprite();
         barBg.type = Image.Type.Simple;
         barBg.color = new Color(0f, 0f, 0f, 0.25f);
         barBg.raycastTarget = false;
-        var barH = barGo.GetComponent<HorizontalLayoutGroup>();
+        HorizontalLayoutGroup barH = barGo.GetComponent<HorizontalLayoutGroup>();
         barH.spacing = 3;
         barH.padding = new RectOffset(4, 4, 4, 4);
         barH.childAlignment = TextAnchor.MiddleCenter;
@@ -226,19 +256,27 @@ public sealed class SleepHudView : MonoBehaviour
         barH.childControlHeight = true;
         barH.childForceExpandWidth = true;
         barH.childForceExpandHeight = true;
-        var barLe = barGo.AddComponent<LayoutElement>();
+        LayoutElement barLe = barGo.AddComponent<LayoutElement>();
         barLe.flexibleWidth = 1f;
         barLe.minWidth = 48f;
         barLe.preferredHeight = 26f;
         _segmentsRoot = barRt;
 
         _boostTmp = CreateTmpInRow(rowRt, "Boost", font, 40f, 14f, BoostYellow, "0%", TextAlignmentOptions.MidlineRight);
+
+        SleepTracker.GetSleepOccupancyCounts(out int initialTotal, out int initialSleeping);
+        if (initialTotal <= 0)
+            initialTotal = 1;
+
+        Refresh(initialTotal, initialSleeping);
     }
 
     private void EnsureSegments(int total)
     {
-        var compact = total > MaxPillowSegments;
-        var expectedSegCount = compact ? 1 : total;
+        if (_segmentsRoot == null)
+            return;
+        bool compact = total > MaxPillowSegments;
+        int expectedSegCount = compact ? 1 : total;
         if (total == _lastTotal && _compactLayout == compact && _segments.Length == expectedSegCount)
             return;
 
@@ -246,8 +284,12 @@ public sealed class SleepHudView : MonoBehaviour
         _compactLayout = compact;
         _ratioTmp = null;
 
-        foreach (Transform c in _segmentsRoot)
-            Destroy(c.gameObject);
+        for (int c = _segmentsRoot.childCount - 1; c >= 0; c--)
+        {
+            Transform child = _segmentsRoot.GetChild(c);
+            if (child != null)
+                Destroy(child.gameObject);
+        }
 
         if (total <= 0)
         {
@@ -255,24 +297,24 @@ public sealed class SleepHudView : MonoBehaviour
             return;
         }
 
-        var pillowSprite = GetPillowSegmentSprite();
+        Sprite pillowSprite = GetPillowSegmentSprite();
 
         if (compact)
         {
-            var pillowWrap = new GameObject("PillowCompact", typeof(RectTransform), typeof(LayoutElement));
+            GameObject pillowWrap = new GameObject("PillowCompact", typeof(RectTransform), typeof(LayoutElement));
             pillowWrap.transform.SetParent(_segmentsRoot, false);
-            var pillowLe = pillowWrap.GetComponent<LayoutElement>();
+            LayoutElement pillowLe = pillowWrap.GetComponent<LayoutElement>();
             pillowLe.flexibleWidth = 0f;
             pillowLe.minWidth = 28f;
             pillowLe.preferredWidth = 40f;
             pillowLe.preferredHeight = 22f;
             pillowLe.flexibleHeight = 1f;
 
-            var segGo = new GameObject("Seg_0", typeof(RectTransform), typeof(Image));
-            var segRt = (RectTransform)segGo.transform;
+            GameObject segGo = new GameObject("Seg_0", typeof(RectTransform), typeof(Image));
+            RectTransform segRt = (RectTransform)segGo.transform;
             segRt.SetParent(pillowWrap.transform, false);
             StretchFull(segRt);
-            var img = segGo.GetComponent<Image>();
+            Image img = segGo.GetComponent<Image>();
             img.sprite = pillowSprite;
             img.type = Image.Type.Simple;
             img.preserveAspect = true;
@@ -281,9 +323,9 @@ public sealed class SleepHudView : MonoBehaviour
 
             _segments = new[] { img };
 
-            var ratioWrap = new GameObject("Ratio", typeof(RectTransform), typeof(LayoutElement));
+            GameObject ratioWrap = new GameObject("Ratio", typeof(RectTransform), typeof(LayoutElement));
             ratioWrap.transform.SetParent(_segmentsRoot, false);
-            var ratioLe = ratioWrap.GetComponent<LayoutElement>();
+            LayoutElement ratioLe = ratioWrap.GetComponent<LayoutElement>();
             ratioLe.flexibleWidth = 1f;
             ratioLe.minWidth = 52f;
             ratioLe.preferredHeight = 22f;
@@ -291,13 +333,12 @@ public sealed class SleepHudView : MonoBehaviour
 
             if (_hudFont != null)
             {
-                var labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
-                var labelRt = (RectTransform)labelGo.transform;
+                GameObject labelGo = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                RectTransform labelRt = (RectTransform)labelGo.transform;
                 labelRt.SetParent(ratioWrap.transform, false);
                 StretchFull(labelRt);
                 _ratioTmp = labelGo.GetComponent<TextMeshProUGUI>();
                 ApplyFont(_ratioTmp, _hudFont);
-                // Match _boostTmp (CreateTmpInRow "Boost": 14f, BoostYellow)
                 _ratioTmp.fontSize = 14f;
                 _ratioTmp.color = BoostYellow;
                 _ratioTmp.text = "0/0";
@@ -311,17 +352,17 @@ public sealed class SleepHudView : MonoBehaviour
         else
         {
             _segments = new Image[total];
-            for (var i = 0; i < total; i++)
+            for (int i = 0; i < total; i++)
             {
-                var segGo = new GameObject($"Seg_{i}", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+                GameObject segGo = new GameObject($"Seg_{i}", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
                 segGo.transform.SetParent(_segmentsRoot, false);
-                var img = segGo.GetComponent<Image>();
+                Image img = segGo.GetComponent<Image>();
                 img.sprite = pillowSprite;
                 img.type = Image.Type.Simple;
                 img.preserveAspect = true;
                 img.color = PillowAwakeTint;
                 img.raycastTarget = false;
-                var le = segGo.GetComponent<LayoutElement>();
+                LayoutElement le = segGo.GetComponent<LayoutElement>();
                 le.flexibleWidth = 1f;
                 le.preferredHeight = 22f;
                 le.minWidth = 8f;
@@ -340,11 +381,11 @@ public sealed class SleepHudView : MonoBehaviour
 
     private static void CreateIconInRow(Transform rowParent, string name, Sprite sprite, float cellWidth, Color tint)
     {
-        var wrap = new GameObject(name, typeof(RectTransform));
-        var wrapRt = (RectTransform)wrap.transform;
+        GameObject wrap = new GameObject(name, typeof(RectTransform));
+        RectTransform wrapRt = (RectTransform)wrap.transform;
         wrapRt.SetParent(rowParent, false);
         ConfigureRowItemStretch(wrapRt, cellWidth);
-        var le = wrap.AddComponent<LayoutElement>();
+        LayoutElement le = wrap.AddComponent<LayoutElement>();
         le.preferredWidth = cellWidth;
         le.minWidth = cellWidth;
         le.flexibleWidth = 0f;
@@ -352,11 +393,11 @@ public sealed class SleepHudView : MonoBehaviour
         le.preferredHeight = -1f;
         le.flexibleHeight = 1f;
 
-        var imgGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
-        var imgRt = (RectTransform)imgGo.transform;
+        GameObject imgGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
+        RectTransform imgRt = (RectTransform)imgGo.transform;
         imgRt.SetParent(wrapRt, false);
         StretchFull(imgRt);
-        var img = imgGo.GetComponent<Image>();
+        Image img = imgGo.GetComponent<Image>();
         img.sprite = sprite;
         img.type = Image.Type.Simple;
         img.color = tint;
@@ -374,11 +415,11 @@ public sealed class SleepHudView : MonoBehaviour
         string text,
         TextAlignmentOptions alignment)
     {
-        var wrap = new GameObject(name, typeof(RectTransform));
-        var wrapRt = (RectTransform)wrap.transform;
+        GameObject wrap = new GameObject(name, typeof(RectTransform));
+        RectTransform wrapRt = (RectTransform)wrap.transform;
         wrapRt.SetParent(rowParent, false);
         ConfigureRowItemStretch(wrapRt, cellWidth);
-        var le = wrap.AddComponent<LayoutElement>();
+        LayoutElement le = wrap.AddComponent<LayoutElement>();
         le.preferredWidth = cellWidth;
         le.minWidth = cellWidth;
         le.flexibleWidth = 0f;
@@ -386,12 +427,12 @@ public sealed class SleepHudView : MonoBehaviour
         le.preferredHeight = -1f;
         le.flexibleHeight = 1f;
 
-        var labelGo = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
-        var labelRt = (RectTransform)labelGo.transform;
+        GameObject labelGo = new GameObject(name, typeof(RectTransform), typeof(TextMeshProUGUI));
+        RectTransform labelRt = (RectTransform)labelGo.transform;
         labelRt.SetParent(wrapRt, false);
         StretchFull(labelRt);
 
-        var tmp = labelGo.GetComponent<TextMeshProUGUI>();
+        TextMeshProUGUI tmp = labelGo.GetComponent<TextMeshProUGUI>();
         ApplyFont(tmp, font);
         tmp.fontSize = fontSize;
         tmp.color = color;
@@ -425,33 +466,60 @@ public sealed class SleepHudView : MonoBehaviour
         if (TMP_Settings.instance != null && TMP_Settings.defaultFontAsset != null)
             return TMP_Settings.defaultFontAsset;
 
-        foreach (var path in HudFontResourcePaths)
+        TMP_FontAsset resolvedFont = null;
+        for (int p = 0; p < HudFontResourcePaths.Length; p++)
         {
-            var loaded = Resources.Load<TMP_FontAsset>(path);
+            TMP_FontAsset loaded = Resources.Load<TMP_FontAsset>(HudFontResourcePaths[p]);
             if (loaded != null)
-                return loaded;
+            {
+                resolvedFont = loaded;
+                break;
+            }
         }
 
-        var root = nearUi;
-        while (root.parent != null)
-            root = root.parent;
-
-        var sceneTmps = root.GetComponentsInChildren<TextMeshProUGUI>(true);
-        for (var i = 0; i < sceneTmps.Length; i++)
+        if (resolvedFont == null)
         {
-            var f = sceneTmps[i].font;
-            if (f != null)
-                return f;
+            Transform root = nearUi;
+            while (root.parent != null)
+                root = root.parent;
+
+            TextMeshProUGUI[] sceneTmps = root.GetComponentsInChildren<TextMeshProUGUI>(true);
+            for (int i = 0; i < sceneTmps.Length; i++)
+            {
+                TMP_FontAsset f = sceneTmps[i].font;
+                if (f != null)
+                {
+                    resolvedFont = f;
+                    break;
+                }
+            }
         }
 
-        var allFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
-        for (var i = 0; i < allFonts.Length; i++)
+        if (resolvedFont == null)
         {
-            if (allFonts[i] != null && allFonts[i].material != null)
-                return allFonts[i];
+            TMP_FontAsset[] allFonts = Resources.FindObjectsOfTypeAll<TMP_FontAsset>();
+            for (int i = 0; i < allFonts.Length; i++)
+            {
+                if (allFonts[i] != null && allFonts[i].material != null)
+                {
+                    resolvedFont = allFonts[i];
+                    break;
+                }
+            }
         }
 
-        return null;
+        if (resolvedFont != null && TMP_Settings.defaultFontAsset == null)
+        {
+            try
+            {
+                TMP_Settings.defaultFontAsset = resolvedFont;
+            }
+            catch
+            {
+            }
+        }
+
+        return resolvedFont;
     }
 
     private static readonly string[] HudFontResourcePaths =
@@ -499,10 +567,10 @@ public sealed class SleepHudView : MonoBehaviour
     {
         try
         {
-            var t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule");
+            Type t = Type.GetType("UnityEngine.ImageConversion, UnityEngine.ImageConversionModule");
             if (t == null)
                 return false;
-            var m = t.GetMethod(
+            MethodInfo m = t.GetMethod(
                 "LoadImage",
                 BindingFlags.Public | BindingFlags.Static,
                 null,
@@ -522,10 +590,12 @@ public sealed class SleepHudView : MonoBehaviour
     {
         try
         {
-            var asm = Assembly.GetExecutingAssembly();
+            Assembly asm = Assembly.GetExecutingAssembly();
             string match = null;
-            foreach (var name in asm.GetManifestResourceNames())
+            string[] resourceNames = asm.GetManifestResourceNames();
+            for (int i = 0; i < resourceNames.Length; i++)
             {
+                string name = resourceNames[i];
                 if (name.EndsWith(manifestEndsWith, StringComparison.OrdinalIgnoreCase))
                 {
                     match = name;
@@ -536,17 +606,17 @@ public sealed class SleepHudView : MonoBehaviour
             if (match == null)
                 return null;
 
-            using (var stream = asm.GetManifestResourceStream(match))
+            using (System.IO.Stream stream = asm.GetManifestResourceStream(match))
             {
                 if (stream == null)
                     return null;
 
-                var len = (int)stream.Length;
-                var bytes = new byte[len];
+                int len = (int)stream.Length;
+                byte[] bytes = new byte[len];
                 if (stream.Read(bytes, 0, len) != len)
                     return null;
 
-                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
                 if (!TryLoadPngIntoTexture(tex, bytes))
                     return null;
 
@@ -569,23 +639,23 @@ public sealed class SleepHudView : MonoBehaviour
             return _moonCrescentSprite;
 
         const int n = 32;
-        var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
-        var clear = new Color32(0, 0, 0, 0);
-        var cx = (n - 1) / 2f;
-        var cy = (n - 1) / 2f;
-        var rOuter = n * 0.44f;
-        var rInner = n * 0.36f;
-        var cutCx = cx + n * 0.14f;
-        for (var y = 0; y < n; y++)
+        Texture2D tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+        Color32 clear = new Color32(0, 0, 0, 0);
+        float cx = (n - 1) / 2f;
+        float cy = (n - 1) / 2f;
+        float rOuter = n * 0.44f;
+        float rInner = n * 0.36f;
+        float cutCx = cx + n * 0.14f;
+        for (int y = 0; y < n; y++)
         {
-            for (var x = 0; x < n; x++)
+            for (int x = 0; x < n; x++)
             {
-                var dx = x - cx;
-                var dy = y - cy;
-                var inDisk = dx * dx + dy * dy <= rOuter * rOuter;
-                var dx2 = x - cutCx;
-                var dy2 = y - cy;
-                var inCut = dx2 * dx2 + dy2 * dy2 <= rInner * rInner;
+                float dx = x - cx;
+                float dy = y - cy;
+                bool inDisk = dx * dx + dy * dy <= rOuter * rOuter;
+                float dx2 = x - cutCx;
+                float dy2 = y - cy;
+                bool inCut = dx2 * dx2 + dy2 * dy2 <= rInner * rInner;
                 tex.SetPixel(x, y, inDisk && !inCut ? MoonBeige : clear);
             }
         }
@@ -603,14 +673,14 @@ public sealed class SleepHudView : MonoBehaviour
 
         const int w = 36;
         const int h = 24;
-        var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-        for (var y = 0; y < h; y++)
+        Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+        for (int y = 0; y < h; y++)
         {
-            for (var x = 0; x < w; x++)
+            for (int x = 0; x < w; x++)
                 tex.SetPixel(x, y, new Color32(0, 0, 0, 0));
         }
 
-        var shade = new Color32((byte)(MoonBeige.r * 0.72f), (byte)(MoonBeige.g * 0.72f), (byte)(MoonBeige.b * 0.72f), 255);
+        Color32 shade = new Color32((byte)(MoonBeige.r * 0.72f), (byte)(MoonBeige.g * 0.72f), (byte)(MoonBeige.b * 0.72f), 255);
         FillRect(tex, w, h, 3, 3, 22, 5, shade);
         FillRect(tex, w, h, 2, 7, 24, 11, MoonBeige);
         FillRect(tex, w, h, 24, 5, 10, 15, MoonBeige);
@@ -624,9 +694,9 @@ public sealed class SleepHudView : MonoBehaviour
 
     private static void FillRect(Texture2D tex, int tw, int th, int x0, int y0, int rw, int rh, Color32 c)
     {
-        for (var y = y0; y < y0 + rh && y < th; y++)
+        for (int y = y0; y < y0 + rh && y < th; y++)
         {
-            for (var x = x0; x < x0 + rw && x < tw; x++)
+            for (int x = x0; x < x0 + rw && x < tw; x++)
                 tex.SetPixel(x, y, c);
         }
     }
@@ -635,7 +705,7 @@ public sealed class SleepHudView : MonoBehaviour
     {
         if (_whiteSprite != null)
             return _whiteSprite;
-        var tex = Texture2D.whiteTexture;
+        Texture2D tex = Texture2D.whiteTexture;
         _whiteSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f), 100f);
         return _whiteSprite;
     }

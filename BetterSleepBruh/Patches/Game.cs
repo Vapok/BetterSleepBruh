@@ -5,12 +5,12 @@ using HarmonyLib;
 
 namespace BetterSleepBruh.Patches;
 
-public class GamePatches
+internal static class GamePatches
 {
     [HarmonyPatch(typeof(Game), nameof(Game.UpdateSleeping))]
-    public static class UpdateSleepingPatch
+    private static class UpdateSleepingPatch
     {
-        public static bool Prefix(Game __instance)
+        private static bool Prefix(Game __instance)
         {
             if (ConfigRegistry.UseVanilleSleep != null && ConfigRegistry.UseVanilleSleep.Value)
                 return true;
@@ -23,20 +23,24 @@ public class GamePatches
                 if (!EnvMan.instance.IsTimeSkipping())
                 {
                     __instance.m_sleeping = false;
-                    ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStop", Array.Empty<object>());
+                    if (ZRoutedRpc.instance != null)
+                    {
+                        ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStop", Array.Empty<object>());
+                    }
                 }
                 return false;
             }
 
-            if (EnvMan.instance.IsTimeSkipping())
+            if (EnvMan.instance.IsTimeSkipping() || !EnvMan.CanSleep())
                 return false;
 
-            SleepTracker.GetSleepOccupancyCounts(out var playerCount, out var playersSleeping);
-
-            if (playerCount > 0 && playersSleeping >= playerCount)
+            if (SleepTracker.AllPlayersSleeping)
             {
                 __instance.m_sleeping = true;
-                ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStart", Array.Empty<object>());
+                if (ZRoutedRpc.instance != null)
+                {
+                    ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStart", Array.Empty<object>());
+                }
                 EnvMan.instance.SkipToMorning();
             }
 

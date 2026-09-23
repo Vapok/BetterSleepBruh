@@ -1,12 +1,9 @@
+using System;
+using System.Collections.Generic;
 using BetterSleepBruh.Configuration;
 using UnityEngine;
 
 namespace BetterSleepBruh.Components;
-
-/*
-* Server-only: tracks sleep window state and broadcasts occupancy / boost to clients.
-* World time is advanced only on the server (Harmony postfix on ZNet.UpdateNetTime). Never add this to client peers.
-*/
 
 public class SleepTracker : MonoBehaviour
 {
@@ -14,14 +11,18 @@ public class SleepTracker : MonoBehaviour
     public bool CanSleep { get; private set; }
     public bool Enabled = true;
 
-    public static double LastPartialSleepExtraRate { get; private set; }
+    public static double CurrentExtraRate { get; private set; }
+    public static int CurrentPlayerCount { get; private set; }
+    public static int CurrentSleepingCount { get; private set; }
+    public static bool AllPlayersSleeping => CurrentPlayerCount > 0 && CurrentSleepingCount >= CurrentPlayerCount;
+
+    public static double LastPartialSleepExtraRate => CurrentExtraRate;
 
     private bool _lastCanSleep;
+    private int _lastBroadcastTotal = -1;
+    private int _lastBroadcastSleeping = -1;
+    private double _lastBroadcastExtraRate = -1.0;
 
-    
-    /******************
-     * STATIC METHODS
-     ******************/
     private static bool IsCharacterInBedForBoost(ZDO zdo)
     {
         return zdo != null && zdo.IsValid() && zdo.GetBool(ZDOVars.s_inBed);
@@ -31,20 +32,22 @@ public class SleepTracker : MonoBehaviour
     {
         playerCount = 0;
         playersSleeping = 0;
-        var znet = ZNet.instance;
+        ZNet znet = ZNet.instance;
         if (znet == null)
             return;
 
-        var zdos = znet.GetAllCharacterZDOS();
-        var sessionPlayers = znet.GetNrOfPlayers();
-        var realTotal = System.Math.Max(zdos?.Count ?? 0, sessionPlayers);
+        List<ZDO> zdos = znet.GetAllCharacterZDOS();
+        int sessionPlayers = znet.GetNrOfPlayers();
+        int zdosCount = zdos != null ? zdos.Count : 0;
+        int realTotal = Math.Max(zdosCount, sessionPlayers);
         playerCount = ConfigRegistry.GetEffectiveTotalPlayersForMod(realTotal);
 
-        var realSleeping = 0;
+        int realSleeping = 0;
         if (zdos != null)
         {
-            foreach (var z in zdos)
+            for (int i = 0; i < zdos.Count; i++)
             {
+                ZDO z = zdos[i];
                 if (z != null && IsCharacterInBedForBoost(z))
                     realSleeping++;
             }
@@ -59,7 +62,7 @@ public class SleepTracker : MonoBehaviour
             return 0.0;
         if (playersSleeping <= 0 || playersSleeping >= playerCount)
             return 0.0;
-        var sleepFraction = playersSleeping / (double)(playerCount - 1);
+        double sleepFraction = playersSleeping / (double)(playerCount - 1);
         return ConfigRegistry.BonusMultiplier.Value * sleepFraction * ConfigRegistry.BonusIncrementScale.Value;
     }
 
@@ -68,40 +71,17 @@ public class SleepTracker : MonoBehaviour
         if (ZNet.instance == null || !ZNet.instance.IsServer() || EnvMan.instance == null)
             return double.PositiveInfinity;
 
-        var env = EnvMan.instance;
-        var timeSeconds = ZNet.instance.GetTimeSeconds();
-        var dayLen = env.m_dayLengthSec;
-        var day = env.GetDay(timeSeconds - dayLen * 0.150000005960464);
+        EnvMan env = EnvMan.instance;
+        double timeSeconds = ZNet.instance.GetTimeSeconds();
+        double dayLen = env.m_dayLengthSec;
+        int day = env.GetDay(timeSeconds - dayLen * 0.150000005960464);
         return env.GetMorningStartSec(day + 1);
     }
 
-    /*
-    * Extra game-time per real second (additive after vanilla m_netTime += dt).
-    * extraRate = BonusMultiplier × sleepFraction × BonusIncrementScale (10).
-    * playerCount = max(zdos, GetNrOfPlayers()), with testing overrides applied.
-    */
     public static double ComputePartialSleepBoost()
     {
-        if (ZNet.instance == null || !ZNet.instance.IsServer())
-        {
-            LastPartialSleepExtraRate = 0.0;
-            return 0.0;
-        }
-
-        if (EnvMan.instance == null || !EnvMan.CanSleep() || EnvMan.instance.IsTimeSkipping())
-        {
-            LastPartialSleepExtraRate = 0.0;
-            return 0.0;
-        }
-
-        GetSleepOccupancyCounts(out var playerCount, out var playersSleeping);
-        LastPartialSleepExtraRate = ComputeExtraRateForPartialBoost(playerCount, playersSleeping);
-        return LastPartialSleepExtraRate;
+        return CurrentExtraRate;
     }
-    
-    /******************
-     * PRIVATE METHODS
-     ******************/
 
     private void Awake()
     {
@@ -112,78 +92,181 @@ public class SleepTracker : MonoBehaviour
         }
 
         Instance = this;
-        BetterSleepBruh.Log.Debug($"[SERVER] SleepTracker Awakes.");
-
+        BetterSleepBruh.Log.Debug("[SERVER] SleepTracker Awakes.");
     }
+
+    private float _lastRpcRecalcTime;
 
     private void Start()
     {
-        BetterSleepBruh.Log.Debug($"[SERVER] SleepTracker Start.");
+        BetterSleepBruh.Log.Debug("[SERVER] SleepTracker Start.");
         if (!ZNet.instance.IsServer())
             return;
 
         _lastCanSleep = EnvMan.CanSleep();
-        ZRoutedRpc.instance.Register(nameof(NotifyBedOccupancyChanged), NotifyBedOccupancyChanged);
+        if (ZRoutedRpc.instance != null)
+        {
+            ZRoutedRpc.instance.Register(nameof(NotifyBedOccupancyChanged), NotifyBedOccupancyChanged);
+            ZRoutedRpc.instance.Register(nameof(RPC_RequestSleepingPlayerInfo), RPC_RequestSleepingPlayerInfo);
+        }
         InvokeRepeating(nameof(UpdateSleeping), 1f, 1f);
-
     }
-    
+
+    public void OnBedOccupancyChanged()
+    {
+        if (ZNet.instance == null || !ZNet.instance.IsServer())
+            return;
+
+        if (!Enabled)
+            return;
+
+        RecalculateOccupancy();
+    }
+
+    private void NotifyBedOccupancyChanged(long sender)
+    {
+        ZNet znet = ZNet.instance;
+        if (znet == null || !znet.IsServer())
+            return;
+        
+        if (!Enabled)
+            return;
+
+        if (sender != ZNet.GetUID() && znet.GetPeer(sender) == null)
+            return;
+
+        float now = Time.time;
+        if (now - _lastRpcRecalcTime < 0.25f)
+            return;
+
+        _lastRpcRecalcTime = now;
+        BetterSleepBruh.Log.Debug($"[SERVER] NotifyBedOccupancyChanged Heard from {sender}");
+        RecalculateOccupancy();
+    }
+
+    private void RPC_RequestSleepingPlayerInfo(long sender)
+    {
+        ZNet znet = ZNet.instance;
+        if (znet == null || !znet.IsServer())
+            return;
+
+        if (sender != ZNet.GetUID() && znet.GetPeer(sender) == null)
+            return;
+
+        if (ZRoutedRpc.instance != null)
+        {
+            ZRoutedRpc.instance.InvokeRoutedRPC(sender,
+                "RPC_SleepingPlayerInfo",
+                CurrentPlayerCount,
+                CurrentSleepingCount,
+                CurrentExtraRate);
+        }
+    }
+
+    public void RecalculateOccupancy(bool forceBroadcast = false)
+    {
+        if (ZNet.instance == null || !ZNet.instance.IsServer())
+        {
+            CurrentPlayerCount = 0;
+            CurrentSleepingCount = 0;
+            CurrentExtraRate = 0.0;
+            return;
+        }
+
+        GetSleepOccupancyCounts(out int playerCount, out int playersSleeping);
+        CurrentPlayerCount = playerCount;
+        CurrentSleepingCount = playersSleeping;
+
+        bool canSleepNow = EnvMan.instance != null && EnvMan.CanSleep() && !EnvMan.instance.IsTimeSkipping();
+        CurrentExtraRate = canSleepNow ? ComputeExtraRateForPartialBoost(playerCount, playersSleeping) : 0.0;
+
+        bool stateChanged = forceBroadcast || 
+                            playerCount != _lastBroadcastTotal || 
+                            playersSleeping != _lastBroadcastSleeping || 
+                            Math.Abs(CurrentExtraRate - _lastBroadcastExtraRate) > 0.001;
+
+        if (stateChanged)
+        {
+            BroadcastSleepingInfoNow();
+        }
+    }
+
+    private int _heartbeatCounter;
+
     private void UpdateSleeping()
     {
-        if (!ZNet.instance.IsServer())
+        if (ZNet.instance == null || !ZNet.instance.IsServer())
             return;
 
         CanSleep = EnvMan.CanSleep();
 
         if (CanSleep)
-            BroadcastSleepingInfoNow();
+        {
+            _heartbeatCounter++;
+            bool forceHeartbeat = _heartbeatCounter >= 3;
+            if (forceHeartbeat)
+                _heartbeatCounter = 0;
+
+            RecalculateOccupancy(forceBroadcast: forceHeartbeat);
+        }
+        else
+        {
+            RecalculateOccupancy();
+        }
 
         if (CanSleep && !_lastCanSleep)
-            ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StartSleep");
+        {
+            if (ZRoutedRpc.instance != null)
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "RPC_StartSleep");
+            }
+            RecalculateOccupancy(forceBroadcast: true);
+        }
 
         if (!CanSleep && _lastCanSleep)
         {
             if (EnvMan.instance == null || !EnvMan.instance.IsTimeSkipping())
             {
-                ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody,"RPC_StopSleep");
+                if (ZRoutedRpc.instance != null)
+                {
+                    ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "RPC_StopSleep");
+                }
             }
+            _lastBroadcastTotal = -1;
+            _lastBroadcastSleeping = -1;
+            _lastBroadcastExtraRate = -1.0;
         }
 
         _lastCanSleep = CanSleep;
     }
 
-    // Server-only hook: rebroadcasts HUD payload immediately when occupancy changes.
-    private void NotifyBedOccupancyChanged(long sender)
+    private void BroadcastSleepingInfoNow()
     {
         if (ZNet.instance == null || !ZNet.instance.IsServer())
             return;
-        
-        if (Instance == null || !Instance.Enabled)
-            return;
-        
-        BetterSleepBruh.Log.Debug($"[SERVER] NotifyBedOccupancyChanged Heard from {sender}");
-        
-        if (EnvMan.instance != null && EnvMan.CanSleep())
-            BroadcastSleepingInfoNow();
-    }
 
-    private void BroadcastSleepingInfoNow()
-    {
-        if (!ZNet.instance.IsServer())
-            return;
-
-        GetSleepOccupancyCounts(out var playersOnServer, out var playersSleeping);
-        var boost = ComputePartialSleepBoost();
+        _lastBroadcastTotal = CurrentPlayerCount;
+        _lastBroadcastSleeping = CurrentSleepingCount;
+        _lastBroadcastExtraRate = CurrentExtraRate;
 
         if (ConfigRegistry.IsPlayerCountTestingActive)
-            BetterSleepBruh.Log.Debug($"[BetterSleepBruh TESTING] broadcast total={playersOnServer} sleeping={playersSleeping} extraRate={boost}");
+            BetterSleepBruh.Log.Debug($"[BetterSleepBruh TESTING] broadcast total={CurrentPlayerCount} sleeping={CurrentSleepingCount} extraRate={CurrentExtraRate}");
         else
-            BetterSleepBruh.Log.Debug($"[SERVER] Player Sleeping Info: Players on Server: {playersOnServer} Players Sleeping: {playersSleeping} Extra rate: {boost}");
+            BetterSleepBruh.Log.Debug($"[SERVER] Player Sleeping Info: Players on Server: {CurrentPlayerCount} Players Sleeping: {CurrentSleepingCount} Extra rate: {CurrentExtraRate}");
 
-        ZRoutedRpc.instance?.InvokeRoutedRPC(ZRoutedRpc.Everybody,
-            "RPC_SleepingPlayerInfo",
-            playersOnServer,
-            playersSleeping,
-            boost);
+        if (ZRoutedRpc.instance != null)
+        {
+            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody,
+                "RPC_SleepingPlayerInfo",
+                CurrentPlayerCount,
+                CurrentSleepingCount,
+                CurrentExtraRate);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+            Instance = null;
     }
 }
