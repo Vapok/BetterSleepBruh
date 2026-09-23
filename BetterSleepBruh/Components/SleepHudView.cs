@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using BetterSleepBruh.Configuration;
+using BetterSleepBruh.Patches;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -43,22 +44,31 @@ public sealed class SleepHudView : MonoBehaviour
 
     private const float StripHeightPx = 40f;
 
+    private bool _rpcsRegistered;
+
     private void Awake()
     {
         BetterSleepBruh.Log.Debug($"SleepHudView Is Awoken");
+        RegisterRpcs();
     }
 
     private void Start()
     {
-        BetterSleepBruh.Log.Debug("[CLIENT] SleepHudView Is Starting, registering RPC's");
-        if (ZRoutedRpc.instance != null)
-        {
-            ZRoutedRpc.instance.Register<int, int, double>("RPC_SleepingPlayerInfo", RPC_SleepingPlayerInfo);
-            ZRoutedRpc.instance.Register("RPC_StartSleep", RPC_StartSleep);
-            ZRoutedRpc.instance.Register("RPC_StopSleep", RPC_StopSleep);
-        }
-
+        BetterSleepBruh.Log.Debug("[CLIENT] SleepHudView Is Starting");
+        RegisterRpcs();
         RequestOrSyncInitialState();
+    }
+
+    private void RegisterRpcs()
+    {
+        if (_rpcsRegistered || ZRoutedRpc.instance == null)
+            return;
+
+        BetterSleepBruh.Log.Debug("[CLIENT] Registering SleepHudView RPCs");
+        ZRoutedRpc.instance.Register<int, int, double>("RPC_SleepingPlayerInfo", RPC_SleepingPlayerInfo);
+        ZRoutedRpc.instance.Register("RPC_StartSleep", RPC_StartSleep);
+        ZRoutedRpc.instance.Register("RPC_StopSleep", RPC_StopSleep);
+        _rpcsRegistered = true;
     }
 
     private void OnEnable()
@@ -88,9 +98,17 @@ public sealed class SleepHudView : MonoBehaviour
 
     private void RequestOrSyncInitialState()
     {
-        if (SleepTracker.Instance != null && SleepTracker.CurrentPlayerCount > 0)
+        if (SleepTracker.Instance != null)
         {
-            Refresh(SleepTracker.CurrentPlayerCount, SleepTracker.CurrentSleepingCount);
+            if (SleepTracker.Instance.CanSleep)
+            {
+                gameObject.SetActive(true);
+                Refresh(SleepTracker.CurrentPlayerCount, SleepTracker.CurrentSleepingCount);
+            }
+            else
+            {
+                gameObject.SetActive(false);
+            }
         }
         else if (ZRoutedRpc.instance != null)
         {
@@ -112,7 +130,11 @@ public sealed class SleepHudView : MonoBehaviour
             BetterSleepBruh.Log.Debug($"[CLIENT] Sleep Boost (extra rate × dt): {sleepBoost}");
         }
 
-        gameObject.SetActive(true);
+        if (!gameObject.activeSelf && (EnvMan.instance == null || EnvManPatches.IsInSleepWindow(EnvMan.instance)))
+        {
+            gameObject.SetActive(true);
+        }
+
         Refresh(totalPlayers, playersSleeping);
     }
 

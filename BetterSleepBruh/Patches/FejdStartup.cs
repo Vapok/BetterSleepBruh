@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 
 namespace BetterSleepBruh.Patches;
 
@@ -13,6 +13,7 @@ public class FejdStartupPatches
         static void Prefix()
         {
             BetterSleepBruh.Waiter.ValheimIsAwake(true);
+            BetterSleepBruh.ModInstance?.ResetSession();
         }
     }
 

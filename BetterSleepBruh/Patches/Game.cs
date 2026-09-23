@@ -31,7 +31,7 @@ internal static class GamePatches
                 return false;
             }
 
-            if (EnvMan.instance.IsTimeSkipping() || !EnvMan.CanSleep())
+            if (EnvMan.instance.IsTimeSkipping() || !EnvManPatches.IsInSleepWindow(EnvMan.instance))
                 return false;
 
             if (SleepTracker.AllPlayersSleeping)

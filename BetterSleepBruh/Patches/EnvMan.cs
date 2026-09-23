@@ -5,6 +5,19 @@ namespace BetterSleepBruh.Patches;
 
 internal static class EnvManPatches
 {
+    public static bool IsInSleepWindow(EnvMan envMan)
+    {
+        if (envMan == null || envMan.IsTimeSkipping())
+            return false;
+
+        float dayFraction = envMan.GetDayFraction();
+        float sleepStart = ConfigRegistry.SleepStart != null ? ConfigRegistry.SleepStart.Value : 0.5f;
+        if (sleepStart < 0.25f)
+            return dayFraction < 0.25f && dayFraction >= sleepStart;
+
+        return dayFraction >= sleepStart || dayFraction < 0.25f;
+    }
+
     [HarmonyPatch(typeof(EnvMan), nameof(EnvMan.CalculateCanSleep))]
     private static class CalculateCanSleepPatch
     {
@@ -12,22 +25,8 @@ internal static class EnvManPatches
         {
             if (ConfigRegistry.UseVanilleSleep != null && ConfigRegistry.UseVanilleSleep.Value)
                 return true;
-            
-            if (__instance.IsTimeSkipping())
-            {
-                __result = false;
-                return false;
-            }
 
-            float dayFraction = __instance.GetDayFraction();
-            float sleepStart = ConfigRegistry.SleepStart != null ? ConfigRegistry.SleepStart.Value : 0.5f;
-            bool inSleepWindow;
-            if (sleepStart < 0.25f)
-                inSleepWindow = dayFraction < 0.25f && dayFraction >= sleepStart;
-            else
-                inSleepWindow = dayFraction >= sleepStart || dayFraction < 0.25f;
-
-            if (!inSleepWindow)
+            if (!IsInSleepWindow(__instance))
             {
                 __result = false;
                 return false;

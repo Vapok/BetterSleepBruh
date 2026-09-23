@@ -1,3 +1,15 @@
+# 2.0.10 - Configuration Sync & Stability Updates
+* **Multiplayer Sleep HUD Visibility & Synchronization**:
+  * Moved `SleepHudView` routed RPC registrations (`RPC_SleepingPlayerInfo`, `RPC_StartSleep`, `RPC_StopSleep`) from `Start()` to `Awake()`, ensuring clients that connect during daytime register network handlers even while the HUD GameObject starts inactive.
+  * Replaced client-side per-frame HUD active overrides in `BetterSleepBruh.Update()` with server-driven sleep state synchronization, eliminating client HUD hiding caused by local wakeup cooldown checks (`localPlayer.m_wakeupTime + m_sleepCooldownSeconds`).
+  * Added `EnvManPatches.IsInSleepWindow` helper for global sleep window checks decoupled from player bed interaction cooldowns, ensuring dedicated and player-hosted listen servers maintain active sleep tracking throughout nighttime.
+  * Server responds to client `RPC_RequestSleepingPlayerInfo` queries with immediate `RPC_StartSleep` or `RPC_StopSleep` dispatch to synchronize clients connecting mid-night.
+  * Hardened session lifecycle reset on disconnect/reconnect in `BetterSleepBruh.cs` and `FejdStartupAwakePatch` to prevent UI build lockout.
+* **Library Configuration Synchronization (`Vapok.Valheim.Common`)**:
+  * Updated internalized `Vapok.Valheim.Common` to 3.21.1015.
+  * Resolves dedicated server issue where admin-only synchronized configurations were stuck in `ReadOnly = true` mode, preventing authorized server admins from editing mod settings in `ConfigDrawers`.
+  * Synchronizes admin status immediately upon receiving `ZNet.RPC_AdminList`.
+
 # 2.0.9 - Performance Optimizations & Time Sync Smoothness
 * **Bed Occupancy Hook Refactor (`PlayerPatches.cs`)**:
   * Replaced universal `ZDO.Set(int, bool)` hook with surgical postfixes on `Player.AttachStart` and `Player.AttachStop` to trigger occupancy recalculation only when players interact with beds.

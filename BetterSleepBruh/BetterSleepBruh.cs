@@ -5,6 +5,7 @@ using System.Reflection;
 using BepInEx;
 using BetterSleepBruh.Components;
 using BetterSleepBruh.Configuration;
+using BetterSleepBruh.Patches;
 using HarmonyLib;
 using JetBrains.Annotations;
 using Jotunn.Utils;
@@ -26,7 +27,7 @@ namespace BetterSleepBruh
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "BetterSleepBruh";
-        private const string _version = "2.0.9";
+        private const string _version = "2.0.10";
         
         //Class Features
         private SleepHudView _sleepHud;
@@ -39,6 +40,7 @@ namespace BetterSleepBruh
         public string DisplayName => _displayName;
         public string Version => _version;
         public BaseUnityPlugin Instance => _instance;
+        public static BetterSleepBruh ModInstance => _instance;
         
         //Class Properties
         public static ILogIt Log => _log;
@@ -95,8 +97,19 @@ namespace BetterSleepBruh
         private void Start()
         {
             ConfigRegistry.Waiter.ConfigurationComplete(true);
-            InvokeRepeating(nameof(WaitForGame), 1f, 1f);
-            InvokeRepeating(nameof(WaitForZNet), 1f, 1f);
+            ResetSession();
+        }
+
+        public void ResetSession()
+        {
+            _zNetHasStopped = false;
+            _sleepHudBuildAttempts = 0;
+            _sleepHud = null;
+            CancelInvoke(nameof(WaitForGame));
+            CancelInvoke(nameof(WaitForZNet));
+            CancelInvoke(nameof(TryBuildSleepHud));
+            InvokeRepeating(nameof(WaitForGame), 0.5f, 0.5f);
+            InvokeRepeating(nameof(WaitForZNet), 0.5f, 0.5f);
         }
 
         private void WaitForGame()
@@ -186,7 +199,8 @@ namespace BetterSleepBruh
 
             if (_sleepHud != null)
             {
-                _sleepHud.gameObject.SetActive(EnvMan.CanSleep());
+                bool isSleepWindow = EnvMan.instance != null && EnvManPatches.IsInSleepWindow(EnvMan.instance);
+                _sleepHud.gameObject.SetActive(isSleepWindow);
                 return;
             }
 
@@ -195,22 +209,37 @@ namespace BetterSleepBruh
         
         private void Update()
         {
-            if (!Player.m_localPlayer || !ZNetScene.instance || !Game.instance || ZNet.instance == null)
+            if (ZNet.instance == null)
                 return;
-            
-            if (!_sleepHud) return;
-            
-            bool canSleep = EnvMan.CanSleep();
-            if (canSleep != _sleepHud.gameObject.activeSelf)
-                _sleepHud.gameObject.SetActive(canSleep);
-            
-            _zNetHasStopped = ZNet.instance.HaveStopped;
 
-            if (!_zNetHasStopped) return;
-            
-            InvokeRepeating(nameof(WaitForZNet), 1f, 1f);
-            InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
-            _sleepHud = null;
+            bool haveStopped = ZNet.instance.HaveStopped;
+            if (haveStopped && !_zNetHasStopped)
+            {
+                _zNetHasStopped = true;
+                _sleepHud = null;
+                CancelInvoke(nameof(WaitForGame));
+                CancelInvoke(nameof(WaitForZNet));
+                CancelInvoke(nameof(TryBuildSleepHud));
+                return;
+            }
+
+            if (!haveStopped && _zNetHasStopped)
+            {
+                ResetSession();
+                return;
+            }
+
+            if (!Player.m_localPlayer || !ZNetScene.instance || !Game.instance)
+                return;
+
+            if (_sleepHud == null)
+            {
+                if (!IsInvoking(nameof(TryBuildSleepHud)))
+                {
+                    _sleepHudBuildAttempts = 0;
+                    InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
+                }
+            }
         }
 
         public void InitializeModule(object send, EventArgs args)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BetterSleepBruh.Configuration;
+using BetterSleepBruh.Patches;
 using UnityEngine;
 
 namespace BetterSleepBruh.Components;
@@ -103,7 +104,7 @@ public class SleepTracker : MonoBehaviour
         if (!ZNet.instance.IsServer())
             return;
 
-        _lastCanSleep = EnvMan.CanSleep();
+        _lastCanSleep = EnvMan.instance != null && EnvManPatches.IsInSleepWindow(EnvMan.instance);
         if (ZRoutedRpc.instance != null)
         {
             ZRoutedRpc.instance.Register(nameof(NotifyBedOccupancyChanged), NotifyBedOccupancyChanged);
@@ -155,6 +156,15 @@ public class SleepTracker : MonoBehaviour
 
         if (ZRoutedRpc.instance != null)
         {
+            if (CanSleep)
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(sender, "RPC_StartSleep");
+            }
+            else
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(sender, "RPC_StopSleep");
+            }
+
             ZRoutedRpc.instance.InvokeRoutedRPC(sender,
                 "RPC_SleepingPlayerInfo",
                 CurrentPlayerCount,
@@ -177,7 +187,7 @@ public class SleepTracker : MonoBehaviour
         CurrentPlayerCount = playerCount;
         CurrentSleepingCount = playersSleeping;
 
-        bool canSleepNow = EnvMan.instance != null && EnvMan.CanSleep() && !EnvMan.instance.IsTimeSkipping();
+        bool canSleepNow = EnvMan.instance != null && EnvManPatches.IsInSleepWindow(EnvMan.instance);
         CurrentExtraRate = canSleepNow ? ComputeExtraRateForPartialBoost(playerCount, playersSleeping) : 0.0;
 
         bool stateChanged = forceBroadcast || 
@@ -198,7 +208,7 @@ public class SleepTracker : MonoBehaviour
         if (ZNet.instance == null || !ZNet.instance.IsServer())
             return;
 
-        CanSleep = EnvMan.CanSleep();
+        CanSleep = EnvMan.instance != null && EnvManPatches.IsInSleepWindow(EnvMan.instance);
 
         if (CanSleep)
         {
