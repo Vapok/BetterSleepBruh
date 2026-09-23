@@ -25,8 +25,19 @@ public sealed class SleepHudView : MonoBehaviour
     private int _lastRefreshedSleeping = -1;
     private bool _compactLayout;
 
+    private GameObject _bedIconGo;
+    private GameObject _arrowChaserGo;
+    private Image[] _arrowImages;
+    private bool _isBoosting;
+    private float _boostFraction;
+    private float _arrowTimer;
+
+    private const float ArrowMinStepDuration = 0.08f;
+    private const float ArrowMaxStepDuration = 0.35f;
+
     private static readonly Color BgMidnight = new(0f, 0f, 0f, 0.39f);
     private static readonly Color PillowAwakeTint = new(0.32f, 0.32f, 0.34f, 1f);
+    private static readonly Color ArrowDimTint = new(0.35f, 0.28f, 0.20f, 0.45f);
     private static readonly Color32 MoonBeige = new(235, 225, 190, 255);
     private static readonly Color32 BoostYellow = new(255, 183, 91, 255);
 
@@ -53,6 +64,26 @@ public sealed class SleepHudView : MonoBehaviour
     private void OnEnable()
     {
         RequestOrSyncInitialState();
+    }
+
+    private void OnDisable()
+    {
+        _isBoosting = false;
+        _arrowTimer = 0f;
+    }
+
+    private void Update()
+    {
+        if (!_isBoosting || _arrowImages == null || _arrowImages.Length < 3)
+            return;
+
+        float stepDuration = Mathf.Lerp(ArrowMaxStepDuration, ArrowMinStepDuration, _boostFraction);
+        _arrowTimer += Time.deltaTime;
+        int step = (int)(_arrowTimer / stepDuration) % 4;
+
+        _arrowImages[0].color = (step >= 0 && step <= 2) ? (Color)BoostYellow : ArrowDimTint;
+        _arrowImages[1].color = (step >= 1 && step <= 2) ? (Color)BoostYellow : ArrowDimTint;
+        _arrowImages[2].color = (step == 2) ? (Color)BoostYellow : ArrowDimTint;
     }
 
     private void RequestOrSyncInitialState()
@@ -101,6 +132,12 @@ public sealed class SleepHudView : MonoBehaviour
             return;
 
         BetterSleepBruh.Log.Debug($"[CLIENT] Stop Sleep");
+
+        _isBoosting = false;
+        if (_arrowChaserGo != null && _arrowChaserGo.activeSelf)
+            _arrowChaserGo.SetActive(false);
+        if (_bedIconGo != null && !_bedIconGo.activeSelf)
+            _bedIconGo.SetActive(true);
 
         if (EnvMan.instance == null || !EnvMan.instance.IsTimeSkipping())
         {
@@ -199,10 +236,33 @@ public sealed class SleepHudView : MonoBehaviour
         _lastRefreshedTotal = totalPlayers;
         _lastRefreshedSleeping = playersSleeping;
 
+        double pct = GetBonusLabelPercent(totalPlayers, playersSleeping);
+        double maxPct = ConfigRegistry.BonusMultiplier != null ? ConfigRegistry.BonusMultiplier.Value * 100.0 : 60.0;
+        bool isBoosting = totalPlayers > 1 && playersSleeping > 0 && playersSleeping < totalPlayers && pct > 0.0001;
+        _isBoosting = isBoosting;
+        _boostFraction = isBoosting && maxPct > 0.0 ? Mathf.Clamp01((float)(pct / maxPct)) : 0f;
+
+        if (_bedIconGo != null && _arrowChaserGo != null)
+        {
+            if (isBoosting)
+            {
+                if (!_arrowChaserGo.activeSelf)
+                    _arrowChaserGo.SetActive(true);
+                if (_bedIconGo.activeSelf)
+                    _bedIconGo.SetActive(false);
+            }
+            else
+            {
+                if (_arrowChaserGo.activeSelf)
+                    _arrowChaserGo.SetActive(false);
+                if (!_bedIconGo.activeSelf)
+                    _bedIconGo.SetActive(true);
+            }
+        }
+
         if (_boostTmp == null)
             return;
 
-        double pct = GetBonusLabelPercent(totalPlayers, playersSleeping);
         string newBoostText = pct <= 0.0001 ? "+0%" : $"+{pct:F0}%";
         if (_boostTmp.text != newBoostText)
             _boostTmp.text = newBoostText;
@@ -238,7 +298,7 @@ public sealed class SleepHudView : MonoBehaviour
         hlg.childForceExpandHeight = true;
 
         CreateIconInRow(rowRt, "Moon", GetMoonIconSprite(), 28f, Color.white);
-        CreateIconInRow(rowRt, "Bed", GetBedIconSprite(), 26f, Color.white);
+        CreateBedSlot(rowRt);
 
         GameObject barGo = new GameObject("BarHost", typeof(RectTransform), typeof(HorizontalLayoutGroup), typeof(Image));
         RectTransform barRt = (RectTransform)barGo.transform;
@@ -377,6 +437,66 @@ public sealed class SleepHudView : MonoBehaviour
         rt.anchorMax = Vector2.one;
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+    }
+
+    private void CreateBedSlot(Transform rowParent)
+    {
+        float cellWidth = 28f;
+        GameObject slotWrap = new GameObject("BedSlot", typeof(RectTransform));
+        RectTransform slotRt = (RectTransform)slotWrap.transform;
+        slotRt.SetParent(rowParent, false);
+        ConfigureRowItemStretch(slotRt, cellWidth);
+        LayoutElement le = slotWrap.AddComponent<LayoutElement>();
+        le.preferredWidth = cellWidth;
+        le.minWidth = cellWidth;
+        le.flexibleWidth = 0f;
+        le.minHeight = -1f;
+        le.preferredHeight = -1f;
+        le.flexibleHeight = 1f;
+
+        _bedIconGo = new GameObject("BedIcon", typeof(RectTransform), typeof(Image));
+        RectTransform bedRt = (RectTransform)_bedIconGo.transform;
+        bedRt.SetParent(slotRt, false);
+        StretchFull(bedRt);
+        Image bedImg = _bedIconGo.GetComponent<Image>();
+        bedImg.sprite = GetBedIconSprite();
+        bedImg.type = Image.Type.Simple;
+        bedImg.color = Color.white;
+        bedImg.preserveAspect = true;
+        bedImg.raycastTarget = false;
+
+        _arrowChaserGo = new GameObject("ArrowChaser", typeof(RectTransform), typeof(HorizontalLayoutGroup));
+        RectTransform arrowRt = (RectTransform)_arrowChaserGo.transform;
+        arrowRt.SetParent(slotRt, false);
+        StretchFull(arrowRt);
+        HorizontalLayoutGroup hlg = _arrowChaserGo.GetComponent<HorizontalLayoutGroup>();
+        hlg.padding = new RectOffset(0, 0, 0, 0);
+        hlg.spacing = 1f;
+        hlg.childAlignment = TextAnchor.MiddleCenter;
+        hlg.childControlWidth = false;
+        hlg.childControlHeight = false;
+        hlg.childForceExpandWidth = false;
+        hlg.childForceExpandHeight = false;
+
+        Sprite chevron = GetChevronSprite();
+        _arrowImages = new Image[3];
+        for (int i = 0; i < 3; i++)
+        {
+            GameObject arrowGo = new GameObject($"Arrow_{i}", typeof(RectTransform), typeof(Image));
+            RectTransform aRt = (RectTransform)arrowGo.transform;
+            aRt.SetParent(arrowRt, false);
+            aRt.sizeDelta = new Vector2(8f, 14f);
+            Image img = arrowGo.GetComponent<Image>();
+            img.sprite = chevron;
+            img.type = Image.Type.Simple;
+            img.color = ArrowDimTint;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            _arrowImages[i] = img;
+        }
+
+        _arrowChaserGo.SetActive(false);
+        _bedIconGo.SetActive(true);
     }
 
     private static void CreateIconInRow(Transform rowParent, string name, Sprite sprite, float cellWidth, Color tint)
@@ -699,6 +819,36 @@ public sealed class SleepHudView : MonoBehaviour
             for (int x = x0; x < x0 + rw && x < tw; x++)
                 tex.SetPixel(x, y, c);
         }
+    }
+
+    private static Sprite _chevronSprite;
+
+    private static Sprite GetChevronSprite()
+    {
+        if (_chevronSprite != null)
+            return _chevronSprite;
+
+        const int w = 8;
+        const int h = 14;
+        Texture2D tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+        Color32 clear = new Color32(0, 0, 0, 0);
+        Color32 white = new Color32(255, 255, 255, 255);
+
+        for (int y = 0; y < h; y++)
+        {
+            int distFromMid = y > 6 ? (y - 7) : (6 - y);
+            int xCenter = 7 - distFromMid;
+            for (int x = 0; x < w; x++)
+            {
+                bool isChevron = x == xCenter || x == xCenter - 1;
+                tex.SetPixel(x, y, isChevron ? white : clear);
+            }
+        }
+
+        tex.Apply();
+        tex.filterMode = FilterMode.Point;
+        _chevronSprite = Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 100f);
+        return _chevronSprite;
     }
 
     private static Sprite BaseWhiteSprite()

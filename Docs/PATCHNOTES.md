@@ -8,7 +8,8 @@
   * Changed client occupancy notifications and initial state queries to unicast directly to the server peer ID (`ZRoutedRpc.instance.GetServerPeerID()`) instead of broadcasting across all peers.
 * **Network Time Peer Synchronization (`ZNetPatches.cs`)**:
   * Implemented 0.25-second active peer `NetTime` broadcast during partial sleep time acceleration, preventing 2-second client time snap-backs.
-* **UI Stability & Sentry Fixes (`SleepHudView.cs`)**:
+* **UI Stability & Features (`SleepHudView.cs`)**:
+  * Added dynamic 3-arrow sequential chaser (`>>>`) swapping with the bed icon during active partial sleep acceleration (`0 < boost < 100%`). Animation step rate scales dynamically with configured sleep boost percentage (`0.35s` to `0.08s` per step).
   * Resolved `BETTERSLEEPBRUH-4` by guarding `_segmentsRoot` against null in `Refresh()` and `EnsureSegments()` prior to full hierarchy construction.
   * Resolved missing font warnings by assigning resolved font to `TMP_Settings.defaultFontAsset`.
   * Removed lazy `var` keywords across UI creation methods in adherence to workspace engineering standards.
