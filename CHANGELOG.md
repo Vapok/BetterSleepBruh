@@ -1,11 +1,15 @@
-# 2.0.10 - Configuration Sync & Stability Updates
-
-* **Sleep HUD Visibility**: Fixed an issue where the sleep HUD would not appear for some players on dedicated servers or multiplayer.
-* **Configuration Sync**: Resolved a library configuration synchronization issue.
+# 2.0.11 - Nighttime Skip & Networking Stability
+* **Dedicated Server Stability**: Guarded nighttime skip routines against rare server timing exceptions.
+* **Network RPC Optimization**: Replaced legacy network target references with explicit peer constants.
 * **Dependency Updates**: Updated internal dependencies for stability.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
+
+### 2.0.10 - Configuration Sync & Stability Updates
+* **Sleep HUD Visibility**: Fixed an issue where the sleep HUD would not appear for some players on dedicated servers or multiplayer.
+* **Configuration Sync**: Resolved a library configuration synchronization issue.
+* **Dependency Updates**: Updated internal dependencies for stability.
 
 ### 2.0.9 - Performance Optimizations & Time Sync Smoothness
 * **Nighttime Stutter Fix**: Fixed game stuttering when players get into bed by updating player counts only when players enter or leave bed instead of checking every game frame.

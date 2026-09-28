@@ -25,7 +25,7 @@ internal static class GamePatches
                     __instance.m_sleeping = false;
                     if (ZRoutedRpc.instance != null)
                     {
-                        ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStop", Array.Empty<object>());
+                        ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStop", Array.Empty<object>());
                     }
                 }
                 return false;
@@ -39,9 +39,16 @@ internal static class GamePatches
                 __instance.m_sleeping = true;
                 if (ZRoutedRpc.instance != null)
                 {
-                    ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "SleepStart", Array.Empty<object>());
+                    ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStart", Array.Empty<object>());
                 }
-                EnvMan.instance.SkipToMorning();
+                try
+                {
+                    EnvMan.instance.SkipToMorning();
+                }
+                catch (Exception ex)
+                {
+                    BetterSleepBruh.Log.Warning($"Error while skipping to morning: {ex.Message}");
+                }
             }
 
             return false;

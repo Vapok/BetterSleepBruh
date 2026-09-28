@@ -1,3 +1,8 @@
+# 2.0.11 - Nighttime Skip & Networking Stability
+* **EnvMan SkipToMorning Guarding (`Game.cs`)**:
+  * Wrapped `EnvMan.instance.SkipToMorning(time)` invocation in `GameUpdatePatch.Prefix` in guarded try/catch with single-trigger error logging, preventing unhandled server exceptions when time transitions race with world save cycles (resolves Sentry issue [BETTERSLEEPBRUH-3](https://vapok-gaming.sentry.io/issues/BETTERSLEEPBRUH-3)).
+  * In `SleepTracker.BroadcastSleepingInfoNow`, replaced `ZRoutedRpc.Everybody` reference with explicit `0L` literal to ensure resilience against 3rd-party patchers modifying `InvokeRoutedRPC`.
+
 # 2.0.10 - Configuration Sync & Stability Updates
 * **Multiplayer Sleep HUD Visibility & Synchronization**:
   * Moved `SleepHudView` routed RPC registrations (`RPC_SleepingPlayerInfo`, `RPC_StartSleep`, `RPC_StopSleep`) from `Start()` to `Awake()`, ensuring clients that connect during daytime register network handlers even while the HUD GameObject starts inactive.
