@@ -86,7 +86,6 @@ namespace BetterSleepBruh
             {
                 Tagline = "Sleep mechanics inspired by Enshrouded allowing fast time progression without requiring all players in bed.",
                 ShowOnStartup = ConfigRegistry.ShowSplashOnStartup,
-                EnableTelemetry = ConfigRegistry.EnableTelemetry,
             });
 
             //???
