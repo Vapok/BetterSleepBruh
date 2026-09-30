@@ -1,3 +1,6 @@
+# 2.0.12 - Compatibility Stability
+* **Compatibility Stability**: Updated dependencies for third party mod compatibilities.
+
 # 2.0.11 - Nighttime Skip & Networking Stability
 * **EnvMan SkipToMorning Guarding (`Game.cs`)**:
   * Wrapped `EnvMan.instance.SkipToMorning(time)` invocation in `GameUpdatePatch.Prefix` in guarded try/catch with single-trigger error logging, preventing unhandled server exceptions when time transitions race with world save cycles (resolves Sentry issue [BETTERSLEEPBRUH-3](https://vapok-gaming.sentry.io/issues/BETTERSLEEPBRUH-3)).

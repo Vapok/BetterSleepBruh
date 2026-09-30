@@ -1,10 +1,13 @@
-# 2.0.11 - Nighttime Skip & Networking Stability
-* **Dedicated Server Stability**: Guarded nighttime skip routines against rare server timing exceptions.
-* **Network RPC Optimization**: Replaced legacy network target references with explicit peer constants.
-* **Dependency Updates**: Updated internal dependencies for stability.
+# 2.0.12 - Compatibility Stability
+* **Compatibility Stability**: Updated dependencies for third party mod compatibilities.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
+
+### 2.0.11 - Nighttime Skip & Networking Stability
+* **Dedicated Server Stability**: Guarded nighttime skip routines against rare server timing exceptions.
+* **Network RPC Optimization**: Replaced legacy network target references with explicit peer constants.
+* **Dependency Updates**: Updated internal dependencies for stability.
 
 ### 2.0.10 - Configuration Sync & Stability Updates
 * **Sleep HUD Visibility**: Fixed an issue where the sleep HUD would not appear for some players on dedicated servers or multiplayer.
