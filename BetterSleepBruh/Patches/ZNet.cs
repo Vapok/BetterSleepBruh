@@ -64,6 +64,7 @@ internal static class ZNetPatches
 
             if (appliedBoost > 0.0)
             {
+                SleepTracker.TotalPartialSleepBoostSeconds += appliedBoost;
                 SyncNetTimeToPeers(__instance, dt);
             }
         }
@@ -87,6 +88,20 @@ internal static class ZNetPatches
                     peer.m_rpc.Invoke("NetTime", (object)netTime);
                 }
             }
+
+            if (ZRoutedRpc.instance != null)
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.Everybody, "BSB_SyncSleepBoostTotal", SleepTracker.TotalPartialSleepBoostSeconds);
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(ZNet), "SaveWorld")]
+    private static class SaveWorldPatch
+    {
+        private static void Postfix()
+        {
+            SleepTracker.SaveData();
         }
     }
 }

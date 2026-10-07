@@ -68,6 +68,7 @@ public sealed class SleepHudView : MonoBehaviour
         ZRoutedRpc.instance.Register<int, int, double>("RPC_SleepingPlayerInfo", RPC_SleepingPlayerInfo);
         ZRoutedRpc.instance.Register("RPC_StartSleep", RPC_StartSleep);
         ZRoutedRpc.instance.Register("RPC_StopSleep", RPC_StopSleep);
+        ZRoutedRpc.instance.Register<double>("BSB_SyncSleepBoostTotal", RPC_SyncSleepBoostTotal);
         _rpcsRegistered = true;
     }
 
@@ -116,8 +117,15 @@ public sealed class SleepHudView : MonoBehaviour
         }
     }
 
+    private void RPC_SyncSleepBoostTotal(long sender, double totalBoost)
+    {
+        SleepTracker.TotalPartialSleepBoostSeconds = totalBoost;
+    }
+
     private void RPC_SleepingPlayerInfo(long sender, int totalPlayers, int playersSleeping, double sleepBoost)
     {
+        SleepTracker.CurrentExtraRate = sleepBoost;
+
         if (Player.m_localPlayer == null)
             return;
 
@@ -150,6 +158,8 @@ public sealed class SleepHudView : MonoBehaviour
 
     private void RPC_StopSleep(long sender)
     {
+        SleepTracker.CurrentExtraRate = 0.0;
+
         if (Player.m_localPlayer == null)
             return;
 

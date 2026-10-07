@@ -15,7 +15,7 @@ internal static class GamePatches
             if (ConfigRegistry.UseVanilleSleep != null && ConfigRegistry.UseVanilleSleep.Value)
                 return true;
 
-            if (ZNet.instance == null || !ZNet.instance.IsServer() || EnvMan.instance == null)
+            if (__instance == null || ZNet.instance == null || !ZNet.instance.IsServer() || EnvMan.instance == null)
                 return false;
 
             if (__instance.m_sleeping)

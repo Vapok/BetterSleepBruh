@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using BetterSleepBruh.Configuration;
 using BetterSleepBruh.Patches;
 using UnityEngine;
@@ -12,7 +14,8 @@ public class SleepTracker : MonoBehaviour
     public bool CanSleep { get; private set; }
     public bool Enabled = true;
 
-    public static double CurrentExtraRate { get; private set; }
+    public static double CurrentExtraRate { get; internal set; }
+    public static double TotalPartialSleepBoostSeconds { get; internal set; }
     public static int CurrentPlayerCount { get; private set; }
     public static int CurrentSleepingCount { get; private set; }
     public static bool AllPlayersSleeping => CurrentPlayerCount > 0 && CurrentSleepingCount >= CurrentPlayerCount;
@@ -110,7 +113,57 @@ public class SleepTracker : MonoBehaviour
             ZRoutedRpc.instance.Register(nameof(NotifyBedOccupancyChanged), NotifyBedOccupancyChanged);
             ZRoutedRpc.instance.Register(nameof(RPC_RequestSleepingPlayerInfo), RPC_RequestSleepingPlayerInfo);
         }
+        LoadData();
         InvokeRepeating(nameof(UpdateSleeping), 1f, 1f);
+    }
+
+    private static string GetSaveFilePath()
+    {
+        if (ZNet.instance == null)
+            return null;
+
+        string worldName = ZNet.instance.GetWorldName();
+        if (string.IsNullOrEmpty(worldName))
+            return null;
+
+        string configDir = BepInEx.Paths.ConfigPath;
+        return Path.Combine(configDir, $"BetterSleepBruh_Data_{worldName}.txt");
+    }
+
+    public static void SaveData()
+    {
+        string path = GetSaveFilePath();
+        if (string.IsNullOrEmpty(path))
+            return;
+
+        try
+        {
+            File.WriteAllText(path, TotalPartialSleepBoostSeconds.ToString(CultureInfo.InvariantCulture));
+        }
+        catch (Exception ex)
+        {
+            BetterSleepBruh.Log.Warning($"Failed to save sleep boost data: {ex.Message}");
+        }
+    }
+
+    public static void LoadData()
+    {
+        string path = GetSaveFilePath();
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return;
+
+        try
+        {
+            string text = File.ReadAllText(path);
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out double value))
+            {
+                TotalPartialSleepBoostSeconds = value;
+            }
+        }
+        catch (Exception ex)
+        {
+            BetterSleepBruh.Log.Warning($"Failed to load sleep boost data: {ex.Message}");
+        }
     }
 
     public void OnBedOccupancyChanged()
@@ -170,6 +223,8 @@ public class SleepTracker : MonoBehaviour
                 CurrentPlayerCount,
                 CurrentSleepingCount,
                 CurrentExtraRate);
+
+            ZRoutedRpc.instance.InvokeRoutedRPC(sender, "BSB_SyncSleepBoostTotal", TotalPartialSleepBoostSeconds);
         }
     }
 
@@ -245,6 +300,7 @@ public class SleepTracker : MonoBehaviour
             _lastBroadcastTotal = -1;
             _lastBroadcastSleeping = -1;
             _lastBroadcastExtraRate = -1.0;
+            SaveData();
         }
 
         _lastCanSleep = CanSleep;
@@ -276,6 +332,7 @@ public class SleepTracker : MonoBehaviour
 
     private void OnDestroy()
     {
+        SaveData();
         if (Instance == this)
             Instance = null;
     }
