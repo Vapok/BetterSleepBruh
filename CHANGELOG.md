@@ -1,8 +1,16 @@
-# 2.0.12 - Compatibility Stability
-* **Compatibility Stability**: Updated dependencies for third party mod compatibilities.
+# 2.1.0 - Station & Ocean Partial Sleep Safeguards
+* **Station Timer Protections**: Cooking stations, ovens, smelters, blast furnaces, kilns, crops, mead fermenters, and wild pickables (berry bushes and mushrooms) now progress at normal speed during partial sleep instead of accelerating.
+* **Granular Server Settings**: Added independent server-synced settings under `[Station Timers]` allowing admins to toggle protections for cooking, smelters, crops, mead, and pickables individually.
+* **Calmer Ocean Waves**: Decoupled physical wave simulation speed during partial sleep and added a smooth wave damping effect to keep sea conditions calm while night accelerates.
+* **Boat Safeguards**: Suppressed unintended high-speed wake impact damage and camera screen shake on boats during accelerated sleep.
+* **Sleep HUD Stability**: Fixed a duplicate network registration that could cause the sleep HUD arrow animation to stop flashing.
+* **General Stability**: Added safety checks to prevent dedicated server timing exceptions during sleep transitions.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
+
+### 2.0.12 - Compatibility Stability
+* **Compatibility Stability**: Updated dependencies for third party mod compatibilities.
 
 ### 2.0.11 - Nighttime Skip & Networking Stability
 * **Dedicated Server Stability**: Guarded nighttime skip routines against rare server timing exceptions.

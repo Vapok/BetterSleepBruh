@@ -18,6 +18,16 @@ namespace BetterSleepBruh.Configuration
         public static ConfigEntry<float> BonusMultiplier;
         public static ConfigEntry<float> BonusIncrementScale;
         public static ConfigEntry<float> BoostFadeRealSecondsBeforeMorning;
+        public static ConfigEntry<bool> ProtectCookingTimers;
+        public static ConfigEntry<bool> ProtectSmelterTimers;
+        public static ConfigEntry<bool> ProtectCropTimers;
+        public static ConfigEntry<bool> ProtectMeadTimers;
+        public static ConfigEntry<bool> ProtectPickableTimers;
+        public static ConfigEntry<bool> DecoupleWaterWaveSpeed;
+        public static ConfigEntry<bool> CalmOceanDuringSleep;
+        public static ConfigEntry<float> OceanCalmMultiplier;
+        public static ConfigEntry<bool> PreventBoatSleepImpactDamage;
+        public static ConfigEntry<bool> SuppressBoatImpactScreenShake;
 
 
         public ConfigRegistry(IPluginInfo mod, bool enableLockedConfigs = false): base(mod, enableLockedConfigs)
@@ -81,6 +91,66 @@ namespace BetterSleepBruh.Configuration
                     "Count of fake players in bed to add while Testing Mode is on (clamped to Fake Total Players).",
                     new AcceptableValueRange<int>(0, 80), 
                     new ConfigurationManagerAttributes { Order = 6, IsAdminOnly = true}),ref TestingSleepingPlayers);
+
+            SyncedConfig("Station Timers", "Protect Cooking Timers", true,
+                new ConfigDescription("If enabled, food on cooking stations and in ovens will not cook or burn faster during partial sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 1, IsAdminOnly = true }),
+                ref ProtectCookingTimers);
+
+            SyncedConfig("Station Timers", "Protect Smelter Timers", true,
+                new ConfigDescription("If enabled, smelters, blast furnaces, and kilns process at normal speed during partial sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 2, IsAdminOnly = true }),
+                ref ProtectSmelterTimers);
+
+            SyncedConfig("Station Timers", "Protect Crop Timers", true,
+                new ConfigDescription("If enabled, crops and planted saplings grow at normal speed during partial sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 3, IsAdminOnly = true }),
+                ref ProtectCropTimers);
+
+            SyncedConfig("Station Timers", "Protect Mead Timers", true,
+                new ConfigDescription("If enabled, fermenters and mead barrels ferment at normal speed during partial sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 4, IsAdminOnly = true }),
+                ref ProtectMeadTimers);
+
+            SyncedConfig("Station Timers", "Protect Pickable Timers", true,
+                new ConfigDescription("If enabled, berry bushes and wild pickables respawn at normal speed during partial sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 5, IsAdminOnly = true }),
+                ref ProtectPickableTimers);
+
+            SyncedConfig("Ocean & Boat Physics", "Decouple Water Wave Speed", true,
+                new ConfigDescription("If enabled, ocean wave simulation moves at normal real-time speed while time is accelerated, preventing violent wave physics.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 1, IsAdminOnly = true }),
+                ref DecoupleWaterWaveSpeed);
+
+            SyncedConfig("Ocean & Boat Physics", "Calm Ocean During Sleep", true,
+                new ConfigDescription("If enabled, ocean waves are calmed and smoothed while night is accelerated.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 2, IsAdminOnly = true }),
+                ref CalmOceanDuringSleep);
+
+            SyncedConfig("Ocean & Boat Physics", "Ocean Calm Multiplier", 0.5f,
+                new ConfigDescription("Wave height multiplier applied when ocean calming is active (0.0 = completely flat, 1.0 = normal storm waves).",
+                    new AcceptableValueRange<float>(0f, 1f),
+                    new ConfigurationManagerAttributes { Order = 3, IsAdminOnly = true }),
+                ref OceanCalmMultiplier);
+
+            SyncedConfig("Ocean & Boat Physics", "Prevent Boat Sleep Impact Damage", true,
+                new ConfigDescription("Prevents boats from taking spurious water impact damage from waves during accelerated sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 4, IsAdminOnly = true }),
+                ref PreventBoatSleepImpactDamage);
+
+            SyncedConfig("Ocean & Boat Physics", "Suppress Boat Impact Screen Shake", true,
+                new ConfigDescription("Prevents camera screen shake caused by high-velocity wave wakes during accelerated sleep.",
+                    null,
+                    new ConfigurationManagerAttributes { Order = 5, IsAdminOnly = true }),
+                ref SuppressBoatImpactScreenShake);
 
             //Local Configs
         }

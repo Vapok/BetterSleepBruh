@@ -1,3 +1,22 @@
+# 2.1.0 - Station & Ocean Partial Sleep Safeguards
+* **Delta-Based Station Timers (`CookingStationPatches.cs`, `SmelterPatches.cs`)**:
+  * Decoupled `CookingStation.GetDeltaTime()` and `Smelter.GetDeltaTime()` from partial sleep acceleration via normalized delta division: `result /= (1.0 + SleepTracker.CurrentExtraRate)`.
+  * Preserves standard real-time cooking and smelting duration when campmates sleep, preventing burnt food and sudden smelting completion.
+* **Timestamp-Based World Timers (`PlantPatches.cs`, `FermenterPatches.cs`, `PickablePatches.cs`)**:
+  * Tracked global partial sleep boost duration authoritatively on the server in `SleepTracker.TotalPartialSleepBoostSeconds` and persisted to `BetterSleepBruh_Data_<WorldName>.txt` on world saves.
+  * Synchronized boost totals to all clients via `BSB_SyncSleepBoostTotal` routed RPC.
+  * Shifted entity ZDO timestamps (`s_plantTime`, `s_startTime`, `s_pickedTime`) forward by accumulated partial sleep boost deltas using entity-local baseline keys (`BSB_LastBoostChecked`, `BSB_FermenterBoostChecked`, `BSB_PickableBoostChecked`).
+  * Guarded mutations by `nview.IsOwner()` to ensure non-destructive peer-to-peer network state propagation.
+* **Ocean Waves & Boat Physics Safeguards (`WaterVolumePatches.cs`, `ShipPatches.cs`)**:
+  * Decoupled wave time progression in `WaterVolume.UpdateWaterTime` by advancing `s_waterTime` and `s_wrappedDayTimeSeconds` by un-boosted frame `dt` while partial sleep acceleration is active.
+  * Added smooth wave height damping in `WaterVolume.GetWaterSurface` scaled by `OceanCalmMultiplier`, guarded by `Time.frameCount` to advance at most once per frame.
+  * Suppressed spurious high-speed wake impact damage and camera screen shake in `Ship.UpdateWaterForce` during accelerated sleep.
+* **Network & Sentry Fixes**:
+  * Resolved Sentry issue [BETTERSLEEPBRUH-8](https://vapok-gaming.sentry.io/issues/BETTERSLEEPBRUH-8): Removed duplicate client RPC registration in `SleepHudView.RegisterRpcs` and uncoupled server/client registration paths.
+  * Resolved Sentry issue [BETTERSLEEPBRUH-3](https://vapok-gaming.sentry.io/issues/BETTERSLEEPBRUH-3): Guarded `__instance` against null in `GamePatches.UpdateSleepingPatch.Prefix`.
+* **Configuration Registry (`ConfigRegistry.cs`)**:
+  * Added server-synced settings: `ProtectCookingTimers`, `ProtectSmelterTimers`, `ProtectCropTimers`, `ProtectMeadTimers`, `ProtectPickableTimers`, `DecoupleWaterWaveSpeed`, `CalmOceanDuringSleep`, `OceanCalmMultiplier`, `PreventBoatSleepImpactDamage`, and `SuppressBoatImpactScreenShake`.
+
 # 2.0.12 - Compatibility Stability
 * **Compatibility Stability**: Updated dependencies for third party mod compatibilities.
 

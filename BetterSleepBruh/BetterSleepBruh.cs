@@ -27,7 +27,7 @@ namespace BetterSleepBruh
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "BetterSleepBruh";
-        private const string _version = "2.0.12";
+        private const string _version = "2.1.0";
         
         //Class Features
         private SleepHudView _sleepHud;

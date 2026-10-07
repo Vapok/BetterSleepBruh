@@ -48,15 +48,38 @@ Gone are the days of yelling in chat for everyone to sprint to bed or log off ju
 
 ## ⚙️ Configuration & Settings
 
-Configure via the in-game [BepInEx Configuration Manager](https://github.com/BepInEx/BepInEx.ConfigurationManager) (<kbd>F1</kbd>) or in `BetterSleepBruh.cfg`:
+Configure via the in-game [BepInEx Configuration Manager](https://github.com/BepInEx/BepInEx.ConfigurationManager) (<kbd>F1</kbd>) or in `vapok.mods.BetterSleepBruh.cfg`:
+
+### Server Settings
 
 | Setting | Default | Description |
 | :--- | :--- | :--- |
-| **Sleep Start Hour** | `12.0` *(Noon)* | Earliest in-game time of day when players are permitted to sleep. |
+| **Sleep Start** | `0.5` *(Noon)* | Earliest day fraction when players are permitted to sleep. |
+| **Bonus Multiplier** | `0.6` | Scales the bonus increment added on top of normal time. |
 | **Bonus Increment Scale** | `20x` | Multiplier scaling the speed bonus per sleeping player. |
-| **Boost Fade Duration** | `3.0s` | Seconds before morning when time acceleration ramps down to standard speed. |
-| **Use Vanilla Start Sleep** | `false` | When enabled, enforces standard vanilla nighttime sleep eligibility checks. |
+| **Boost Fade (Real Seconds)** | `3.0s` | Seconds before morning when time acceleration ramps down to standard speed. |
+| **Use Vanilla Sleep Start** | `false` | When enabled, enforces standard vanilla nighttime sleep eligibility checks. |
 | **Enable Testing Mode** | `false` | Developer testing mode to simulate connected and sleeping players. |
+
+### Station & World Timers
+
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| **Protect Cooking Timers** | `true` | Food on cooking stations and in ovens will not cook or burn faster during partial sleep. |
+| **Protect Smelter Timers** | `true` | Smelters, blast furnaces, and kilns process at normal speed during partial sleep. |
+| **Protect Crop Timers** | `true` | Planted crops and saplings grow at normal speed during partial sleep. |
+| **Protect Mead Timers** | `true` | Fermenters and mead barrels ferment at normal speed during partial sleep. |
+| **Protect Pickable Timers** | `true` | Berry bushes and wild harvestables respawn at normal speed during partial sleep. |
+
+### Ocean & Boat Physics
+
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| **Decouple Water Wave Speed** | `true` | Ocean wave simulation moves at normal real-time speed while time is accelerated, preventing violent wave physics. |
+| **Calm Ocean During Sleep** | `true` | Ocean waves are calmed and smoothed while night is accelerated. |
+| **Ocean Calm Multiplier** | `0.5` | Wave height multiplier applied when ocean calming is active (0.0 = completely flat, 1.0 = normal). |
+| **Prevent Boat Sleep Impact Damage** | `true` | Prevents boats from taking spurious water impact damage from waves during accelerated sleep. |
+| **Suppress Boat Impact Screen Shake** | `true` | Prevents camera screen shake caused by high-velocity wave wakes during accelerated sleep. |
 
 ---
 
