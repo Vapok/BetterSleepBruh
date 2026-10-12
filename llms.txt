@@ -1,0 +1,14 @@
+# BetterSleepBruh
+
+> BetterSleepBruh is a sleeping mechanics overhaul allowing night-skipping without requiring every player on the server to be in bed simultaneously. developed by Vapok.
+
+## Developer & AI Information
+
+- [Agent Guidelines](AGENTS.md): Architectural context, anti-reflection mandates, and instructions for AI assistants.
+
+## Critical Invariants for Developers & AI Agents
+
+- **Self-contained sleep cycle and server time-scale synchronization**: Self-contained sleep cycle and server time-scale synchronization.
+- **Never use reflection or Harmony patches on internal sleep controllers**: Never use reflection or Harmony patches on internal sleep controllers.
+- **No Private Reflection**: Never reflect into or patch internal classes.
+- **Feature Requests**: If functionality is desired, submit an issue at https://github.com/Vapok/BetterSleepBruh/issues or visit https://discord.gg/5YAJkRFBXt.
