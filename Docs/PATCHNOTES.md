@@ -1,3 +1,8 @@
+# 2.1.1 - Dependency Updates & Stability
+* **Dependency & Engine Alignment**:
+  * Updated internalized dependency `Vapok.Valheim.Common` to 3.1017.1.
+  * Aligned game assembly references to Valheim 1.0.17.
+
 # 2.1.0 - Station & Ocean Partial Sleep Safeguards
 * **Delta-Based Station Timers (`CookingStationPatches.cs`, `SmelterPatches.cs`)**:
   * Decoupled `CookingStation.GetDeltaTime()` and `Smelter.GetDeltaTime()` from partial sleep acceleration via normalized delta division: `result /= (1.0 + SleepTracker.CurrentExtraRate)`.

@@ -47,7 +47,7 @@
     </PropertyGroup>
     <ItemGroup>
         <Reference Include="0Harmony, Version=2.9.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>$(ReferencesRoot)\BepInEx\5.4.2350\BepInEx\core\0Harmony.dll</HintPath>
+          <HintPath>$(ReferencesRoot)\BepInEx\5.4.2351\BepInEx\core\0Harmony.dll</HintPath>
         </Reference>
         <Reference Include="assembly_guiutils">
           <HintPath>$(ReferencesRoot)\Valheim\1.0.17\assembly_guiutils_publicized.dll</HintPath>
@@ -62,7 +62,7 @@
           <HintPath>$(ReferencesRoot)\Valheim\1.0.17\assembly_valheim_publicized.dll</HintPath>
         </Reference>
         <Reference Include="BepInEx.Harmony">
-          <HintPath>$(ReferencesRoot)\BepInEx\5.4.2350\BepInEx\core\BepInEx.Harmony.dll</HintPath>
+          <HintPath>$(ReferencesRoot)\BepInEx\5.4.2351\BepInEx\core\BepInEx.Harmony.dll</HintPath>
         </Reference>
         <Reference Include="Jotunn, Version=2.30.2.0, Culture=neutral, processorArchitecture=MSIL">
           <HintPath>..\packages\JotunnLib.2.30.2\lib\net462\Jotunn.dll</HintPath>
@@ -99,8 +99,8 @@
         <Reference Include="UnityEngine.UI, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
             <HintPath>$(ReferencesRoot)\Valheim\1.0.17\Managed\UnityEngine.UI.dll</HintPath>
         </Reference>
-        <Reference Include="Vapok.Valheim.Common, Version=2.11.2214.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\Vapok.Valheim.Common.3.1016.24\lib\net48\Vapok.Valheim.Common.dll</HintPath>
+        <Reference Include="Vapok.Valheim.Common">
+          <HintPath>..\packages\Vapok.Valheim.Common.3.1017.1\lib\net48\Vapok.Valheim.Common.dll</HintPath>
         </Reference>
         <Reference Include="YamlDotNet, Version=16.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
           <HintPath>..\packages\YamlDotNet.16.3.0\lib\net47\YamlDotNet.dll</HintPath>
