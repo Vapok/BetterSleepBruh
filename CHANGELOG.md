@@ -1,9 +1,13 @@
-# 2.1.1 - Dependency Updates & Stability
-* Updated internal dependencies for stability.
+# 2.1.2 - Dependency Updates & Valheim 1.0.20 Alignment
+* **Compatibility**: Updated internal dependencies for stability and Valheim 1.0.20 compatibility.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
 
+
+
+### 2.1.1 - Dependency Updates & Stability
+* Updated internal dependencies for stability.
 
 ### 2.1.0 - Station & Ocean Partial Sleep Safeguards
 * **Station Timer Protections**: Cooking stations, ovens, smelters, blast furnaces, kilns, crops, mead fermenters, and wild pickables (berry bushes and mushrooms) now progress at normal speed during partial sleep instead of accelerating.
