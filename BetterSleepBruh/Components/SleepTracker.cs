@@ -37,27 +37,35 @@ public class SleepTracker : MonoBehaviour
         playerCount = 0;
         playersSleeping = 0;
         ZNet znet = ZNet.instance;
-        if (znet == null)
+        if (znet == null || ZDOMan.instance == null)
             return;
 
-        List<ZDO> zdos = znet.GetAllCharacterZDOS();
-        int sessionPlayers = znet.GetNrOfPlayers();
-        int zdosCount = zdos != null ? zdos.Count : 0;
-        int realTotal = Math.Max(zdosCount, sessionPlayers);
-        playerCount = ConfigRegistry.GetEffectiveTotalPlayersForMod(realTotal);
-
-        int realSleeping = 0;
-        if (zdos != null)
+        try
         {
-            for (int i = 0; i < zdos.Count; i++)
-            {
-                ZDO z = zdos[i];
-                if (z != null && IsCharacterInBedForBoost(z))
-                    realSleeping++;
-            }
-        }
+            List<ZDO> zdos = znet.GetAllCharacterZDOS();
+            int sessionPlayers = znet.GetNrOfPlayers();
+            int zdosCount = zdos != null ? zdos.Count : 0;
+            int realTotal = Math.Max(zdosCount, sessionPlayers);
+            playerCount = ConfigRegistry.GetEffectiveTotalPlayersForMod(realTotal);
 
-        playersSleeping = ConfigRegistry.GetEffectiveSleepingPlayersForMod(realSleeping, playerCount);
+            int realSleeping = 0;
+            if (zdos != null)
+            {
+                for (int i = 0; i < zdos.Count; i++)
+                {
+                    ZDO z = zdos[i];
+                    if (z != null && IsCharacterInBedForBoost(z))
+                        realSleeping++;
+                }
+            }
+
+            playersSleeping = ConfigRegistry.GetEffectiveSleepingPlayersForMod(realSleeping, playerCount);
+        }
+        catch (Exception)
+        {
+            playerCount = 0;
+            playersSleeping = 0;
+        }
     }
 
     private static double ComputeExtraRateForPartialBoost(int playerCount, int playersSleeping)
@@ -65,6 +73,8 @@ public class SleepTracker : MonoBehaviour
         if (playerCount <= 1)
             return 0.0;
         if (playersSleeping <= 0 || playersSleeping >= playerCount)
+            return 0.0;
+        if (ConfigRegistry.BonusMultiplier == null || ConfigRegistry.BonusIncrementScale == null)
             return 0.0;
         double sleepFraction = playersSleeping / (double)(playerCount - 1);
         return ConfigRegistry.BonusMultiplier.Value * sleepFraction * ConfigRegistry.BonusIncrementScale.Value;
