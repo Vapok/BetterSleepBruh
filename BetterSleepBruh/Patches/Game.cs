@@ -25,7 +25,14 @@ internal static class GamePatches
                     __instance.m_sleeping = false;
                     if (ZRoutedRpc.instance != null)
                     {
-                        ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStop", Array.Empty<object>());
+                        try
+                        {
+                            ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStop", Array.Empty<object>());
+                        }
+                        catch (Exception ex)
+                        {
+                            BetterSleepBruh.Log.Warning($"Error while invoking SleepStop RPC: {ex.Message}");
+                        }
                     }
                 }
                 return false;
@@ -39,7 +46,14 @@ internal static class GamePatches
                 __instance.m_sleeping = true;
                 if (ZRoutedRpc.instance != null)
                 {
-                    ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStart", Array.Empty<object>());
+                    try
+                    {
+                        ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStart", Array.Empty<object>());
+                    }
+                    catch (Exception ex)
+                    {
+                        BetterSleepBruh.Log.Warning($"Error while invoking SleepStart RPC: {ex.Message}");
+                    }
                 }
                 try
                 {

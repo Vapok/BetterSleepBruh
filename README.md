@@ -138,6 +138,24 @@ Configure via the in-game [BepInEx Configuration Manager](https://github.com/Bep
 * ⚠️ **Integration Policy**: BetterSleepBruh is a self-contained mod without a public API. Do not use reflection or Harmony patches on internal classes.
 * 💡 **Feature Requests**: If you need integration hooks or functionality, open a [Feature Request](https://github.com/Vapok/BetterSleepBruh/issues) or reach out in our [Discord](https://discord.gg/5YAJkRFBXt).
 
+---
+
+## 🤖 AI Disclosure & Transparency Audit
+
+In accordance with mod store's various AI policies, below is the full transparency breakdown for **BetterSleepBruh**:
+
+* **Audit Status**: `AI ASSISTED`
+* **Weighted LLM Score**: `39.8%`
+
+| Category | Evaluated Surface | LLM Score | Status |
+| :--- | :--- | :--- | :--- |
+| **C# Assembly & Logic** | Decompiled C# source (95 files) | `57.0%` | Evaluated C# codebase across 13 substantive author files (2589 lines), identifying LLM authoring idioms and architectural scaffolding across approximately 57% of the codebase. |
+| **Package Manifest & Structure** | Manifest, structure & icon (v2.1.3) | `0.0%` | Evaluated manifest.json alongside storefront icon.png; the icon exhibits desktop image-editor composite artifacts (pHYs chunk and Snagit/GDI+ IDAT block sizing), resulting in a 0.0% authentic human composite score. |
+| **Documentation & Copywriting** | Package documentation (9058 chars) | `85.0%` | Evaluated README.md; the documentation is heavily structured with systematic emoji-prefixed section headers, comprehensive Markdown config/feature tables, and GitHub-style formatting indicative of AI assistance. |
+| **Visual & Audio Media** | In-package Unity & media assets | `0.0%` | Evaluated in-package embedded media resources (sleephud_bed.png, sleephud_moon.png, sleephud_pillow.png); these consist of clean 2D vector UI icons without AI generation or upscaling artifacts. |
+
+---
+
 ## 🔒 Anonymous Telemetry, Error Reporting & Privacy
 
 BetterSleepBruh includes lightweight, privacy-first telemetry and error reporting to help monitor mod stability, diagnose unhandled bugs, and track active version adoption across game updates.

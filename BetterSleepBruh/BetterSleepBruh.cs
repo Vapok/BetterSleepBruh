@@ -22,12 +22,12 @@ namespace BetterSleepBruh
     [BepInDependency("com.ValheimModding.YamlDotNetDetector")]
     [BepInPlugin(_pluginId, _displayName, _version)]
     [SynchronizationMode(AdminOnlyStrictness.IfOnServer)]
-    public class BetterSleepBruh : BaseUnityPlugin, IPluginInfo
+    public class BetterSleepBruh : VapokModBase, IPluginInfo
     {
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "BetterSleepBruh";
-        private const string _version = "2.1.2";
+        private const string _version = "2.1.3";
         
         //Class Features
         private SleepHudView _sleepHud;

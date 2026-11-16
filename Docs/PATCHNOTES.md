@@ -1,3 +1,12 @@
+# 2.1.3 - Valheim 1.0.21 Update & Stability Fixes
+* **SleepTracker & Game Sleep RPC Hardening (`BETTERSLEEPBRUH-3` & `BETTERSLEEPBRUH-A`)**:
+  * Added `ZDOMan.instance != null` and configuration entry guards in `SleepTracker.GetSleepOccupancyCounts` and `ComputeExtraRateForPartialBoost`.
+  * Guarded `ZRoutedRpc.instance.InvokeRoutedRPC(0L, "SleepStop")` and `"SleepStart"` invocations inside `GamePatches.UpdateSleepingPatch.Prefix` so exceptions thrown by broken world piece `WearNTear.OnSleep()` handlers on dedicated servers do not abort the sleep update loop.
+* **Dependency & Engine Alignment**:
+  * Inherited `VapokModBase` to declare `[BepInIncompatibility("IAmOnTheInternetAndItIsScary.NoPopUpsInMyValheim")]`.
+  * Updated internalized dependency `Vapok.Valheim.Common` to 3.1021.2.
+  * Aligned game assembly references to Valheim 1.0.21 and BepInEx 5.4.2360.
+
 # 2.1.2 - Dependency Updates & Valheim 1.0.20 Alignment
 * **Dependency & Engine Alignment**:
   * Updated internalized dependency `Vapok.Valheim.Common` to 3.1020.1.
