@@ -1,7 +1,7 @@
 # 2.1.3 - Valheim 1.0.21 Update & Stability Fixes
 * **Sleep Tracking**: Fixed a rare error when checking sleeping players while a world is loading or shutting down.
 * **Documentation**: Added AI transparency audit disclosure to README.
-* **Compatibility**: Marked incompatible with NoPopUpsInMyValheim, and updated dependencies for Valheim 1.0.21 and BepInEx 5.4.2360.
+* **Compatibility**: Updated dependencies for Valheim 1.0.21 and BepInEx 5.4.2360.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
