@@ -1,10 +1,13 @@
-# 2.1.3 - Valheim 1.0.21 Update & Stability Fixes
-* **Sleep Tracking**: Fixed a rare error when checking sleeping players while a world is loading or shutting down.
-* **Documentation**: Added AI transparency audit disclosure to README.
-* **Compatibility**: Updated dependencies for Valheim 1.0.21 and BepInEx 5.4.2360.
+# 2.1.4 - Valheim 1.0.30 Update & Dependency Alignment
+* **Compatibility**: Updated dependencies for Valheim 1.0.30 stability.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
+
+### 2.1.3 - Valheim 1.0.21 Update & Stability Fixes
+* **Sleep Tracking**: Fixed a rare error when checking sleeping players while a world is loading or shutting down.
+* **Documentation**: Added AI transparency audit disclosure to README.
+* **Compatibility**: Updated dependencies for Valheim 1.0.21 and BepInEx 5.4.2360.
 
 
 
