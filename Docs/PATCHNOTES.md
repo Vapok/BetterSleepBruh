@@ -1,3 +1,8 @@
+# 2.1.4 - Valheim 1.0.30 Update & Dependency Alignment
+* **Dependency & Engine Alignment**:
+  * Updated internalized dependency `Vapok.Valheim.Common` to 3.1030.1.
+  * Aligned game assembly references to Valheim 1.0.30.
+
 # 2.1.3 - Valheim 1.0.21 Update & Stability Fixes
 * **SleepTracker & Game Sleep RPC Hardening (`BETTERSLEEPBRUH-3` & `BETTERSLEEPBRUH-A`)**:
   * Added `ZDOMan.instance != null` and configuration entry guards in `SleepTracker.GetSleepOccupancyCounts` and `ComputeExtraRateForPartialBoost`.
