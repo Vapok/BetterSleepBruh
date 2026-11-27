@@ -1,3 +1,17 @@
+# 2.1.5 - Dedicated Server Crop, Mead & Pickable Timer Sync Fix
+* **Client/Server Partial Sleep Boost Synchronization (`SleepTracker.cs`, `SleepHudView.cs`, `BetterSleepBruh.cs`, `ZNet.cs`)**:
+  * Resolved [GitHub Issue #7](https://github.com/Vapok/BetterSleepBruh/issues/7) where `SleepTracker.TotalPartialSleepBoostSeconds` defaulted to `0.0` on client launch prior to receiving `BSB_SyncSleepBoostTotal` from the server, causing client-owned `Plant`, `Fermenter`, and `Pickable` instances to reset their stored ZDO checkpoint (`BSB_LastBoostChecked`, `BSB_FermenterBoostChecked`, `BSB_PickableBoostChecked`) to `0` and subsequently shift `s_plantTime`, `s_startTime`, and `s_pickedTime` forward by the server's entire historical boost total.
+  * Added `SleepTracker.HasSyncedBoostTotal` and `SleepTracker.ResetSessionState()` to gate client timer protection patches until the authoritative server boost total has been received and to clear static state on session reset / `ZNet` disconnect.
+  * Added `SleepHudView.EnsureBoostTotalSynced` driven from `BetterSleepBruh.Update()` so clients connecting during daytime (while `SleepHudView` is inactive) reliably retry initial sync requests if the server peer handshake is not yet complete.
+  * Flushed trailing `< 0.25s` boost deltas to connected peers in `ZNetPatches.UpdateNetTime.Postfix` when partial sleep boost terminates or reaches `morningStartSec`.
+* **Timer Protection Hardening & Self-Healing (`PlantPatches.cs`, `FermenterPatches.cs`, `PickablePatches.cs`)**:
+  * Removed destructive `lastCheckedTicks > currentTotalTicks` ZDO checkpoint overwrites across `PlantPatches`, `FermenterPatches`, and `PickablePatches`.
+  * Added `Plant.Awake` (`PlantAwakePatch`) and `Fermenter.RPC_AddItem` / `Fermenter.ResetFermentationTimer` postfixes to stamp current boost ticks immediately upon timer creation, and reset `BSB_FermenterBoostChecked` to `-1L` while a fermenter is empty (`s_startTime == 0L`) so partial sleep accumulated while empty does not shift the next batch.
+  * Clamped `s_plantTime`, `s_startTime`, and `s_pickedTime` against `ZNet.instance.GetTime().Ticks` to automatically self-heal existing world entities whose start timestamps were previously pushed into the future.
+* **Dependency & Engine Alignment**:
+  * Updated `JotunnLib` dependency to 2.30.3.
+  * Aligned game assembly references to Valheim 1.0.31.
+
 # 2.1.4 - Valheim 1.0.30 Update & Dependency Alignment
 * **Dependency & Engine Alignment**:
   * Updated internalized dependency `Vapok.Valheim.Common` to 3.1030.1.

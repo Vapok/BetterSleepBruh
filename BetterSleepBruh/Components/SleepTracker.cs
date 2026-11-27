@@ -16,11 +16,21 @@ public class SleepTracker : MonoBehaviour
 
     public static double CurrentExtraRate { get; internal set; }
     public static double TotalPartialSleepBoostSeconds { get; internal set; }
+    public static bool HasSyncedBoostTotal { get; internal set; }
     public static int CurrentPlayerCount { get; private set; }
     public static int CurrentSleepingCount { get; private set; }
     public static bool AllPlayersSleeping => CurrentPlayerCount > 0 && CurrentSleepingCount >= CurrentPlayerCount;
 
     public static double LastPartialSleepExtraRate => CurrentExtraRate;
+
+    public static void ResetSessionState()
+    {
+        CurrentExtraRate = 0.0;
+        TotalPartialSleepBoostSeconds = 0.0;
+        HasSyncedBoostTotal = false;
+        CurrentPlayerCount = 0;
+        CurrentSleepingCount = 0;
+    }
 
     private bool _lastCanSleep;
     private int _lastBroadcastTotal = -1;
@@ -106,6 +116,7 @@ public class SleepTracker : MonoBehaviour
         }
 
         Instance = this;
+        LoadData();
         BetterSleepBruh.Log.Debug("[SERVER] SleepTracker Awakes.");
     }
 
@@ -123,7 +134,8 @@ public class SleepTracker : MonoBehaviour
             ZRoutedRpc.instance.Register(nameof(NotifyBedOccupancyChanged), NotifyBedOccupancyChanged);
             ZRoutedRpc.instance.Register(nameof(RPC_RequestSleepingPlayerInfo), RPC_RequestSleepingPlayerInfo);
         }
-        LoadData();
+        if (!HasSyncedBoostTotal)
+            LoadData();
         InvokeRepeating(nameof(UpdateSleeping), 1f, 1f);
     }
 
@@ -158,6 +170,9 @@ public class SleepTracker : MonoBehaviour
 
     public static void LoadData()
     {
+        TotalPartialSleepBoostSeconds = 0.0;
+        HasSyncedBoostTotal = true;
+
         string path = GetSaveFilePath();
         if (string.IsNullOrEmpty(path) || !File.Exists(path))
             return;

@@ -27,7 +27,7 @@ namespace BetterSleepBruh
         //Module Constants
         private const string _pluginId = "vapok.mods.BetterSleepBruh";
         private const string _displayName = "BetterSleepBruh";
-        private const string _version = "2.1.4";
+        private const string _version = "2.1.5";
         
         //Class Features
         private SleepHudView _sleepHud;
@@ -101,6 +101,7 @@ namespace BetterSleepBruh
 
         public void ResetSession()
         {
+            SleepTracker.ResetSessionState();
             _zNetHasStopped = false;
             _sleepHudBuildAttempts = 0;
             _sleepHud = null;
@@ -123,7 +124,7 @@ namespace BetterSleepBruh
 
         private void WaitForZNet()
         {
-            if (ZNet.instance == null || _zNetHasStopped)
+            if (ZNet.instance == null || Game.instance == null || _zNetHasStopped)
                 return;
 
             CancelInvoke(nameof(WaitForZNet));
@@ -214,6 +215,7 @@ namespace BetterSleepBruh
             bool haveStopped = ZNet.instance.HaveStopped;
             if (haveStopped && !_zNetHasStopped)
             {
+                SleepTracker.ResetSessionState();
                 _zNetHasStopped = true;
                 _sleepHud = null;
                 CancelInvoke(nameof(WaitForGame));
@@ -238,6 +240,10 @@ namespace BetterSleepBruh
                     _sleepHudBuildAttempts = 0;
                     InvokeRepeating(nameof(TryBuildSleepHud), 0f, 0.25f);
                 }
+            }
+            else if (!ZNet.instance.IsServer() && !SleepTracker.HasSyncedBoostTotal)
+            {
+                _sleepHud.EnsureBoostTotalSynced(Time.unscaledDeltaTime);
             }
         }
 

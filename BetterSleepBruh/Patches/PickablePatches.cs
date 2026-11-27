@@ -14,6 +14,9 @@ internal static class PickablePatches
         if (ConfigRegistry.ProtectPickableTimers == null || !ConfigRegistry.ProtectPickableTimers.Value)
             return;
 
+        if (!SleepTracker.HasSyncedBoostTotal)
+            return;
+
         if (pickable == null || pickable.m_respawnTimeMinutes <= 0f || !pickable.GetPicked())
             return;
 
@@ -28,10 +31,14 @@ internal static class PickablePatches
         if (zdo == null)
             return;
 
+        long nowTicks = ZNet.instance != null ? ZNet.instance.GetTime().Ticks : 0L;
+        long pickedTime = zdo.GetLong(ZDOVars.s_pickedTime, 0L);
         long currentTotalTicks = (long)(SleepTracker.TotalPartialSleepBoostSeconds * 10000000.0);
         long lastCheckedTicks = zdo.GetLong(_lastBoostCheckKey, -1L);
         if (lastCheckedTicks < 0L)
         {
+            if (nowTicks > 0L && pickedTime > nowTicks)
+                zdo.Set(ZDOVars.s_pickedTime, nowTicks);
             zdo.Set(_lastBoostCheckKey, currentTotalTicks);
             return;
         }
@@ -39,17 +46,18 @@ internal static class PickablePatches
         long deltaTicks = currentTotalTicks - lastCheckedTicks;
         if (deltaTicks > 0L)
         {
-            long pickedTime = zdo.GetLong(ZDOVars.s_pickedTime, 0L);
             if (pickedTime > 0L)
             {
                 long newPickedTime = pickedTime + deltaTicks;
+                if (nowTicks > 0L && newPickedTime > nowTicks)
+                    newPickedTime = nowTicks;
                 zdo.Set(ZDOVars.s_pickedTime, newPickedTime);
             }
             zdo.Set(_lastBoostCheckKey, currentTotalTicks);
         }
-        else if (lastCheckedTicks > currentTotalTicks)
+        else if (nowTicks > 0L && pickedTime > nowTicks)
         {
-            zdo.Set(_lastBoostCheckKey, currentTotalTicks);
+            zdo.Set(ZDOVars.s_pickedTime, nowTicks);
         }
     }
 
@@ -68,6 +76,9 @@ internal static class PickablePatches
         private static void Postfix(Pickable __instance, bool picked)
         {
             if (!picked || ConfigRegistry.ProtectPickableTimers == null || !ConfigRegistry.ProtectPickableTimers.Value)
+                return;
+
+            if (!SleepTracker.HasSyncedBoostTotal)
                 return;
 
             if (__instance == null || __instance.m_respawnTimeMinutes <= 0f)
