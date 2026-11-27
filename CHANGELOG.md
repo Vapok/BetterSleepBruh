@@ -1,8 +1,14 @@
-# 2.1.4 - Valheim 1.0.30 Update & Dependency Alignment
-* **Compatibility**: Updated dependencies for Valheim 1.0.30 stability.
+# 2.1.5 - Dedicated Server Crop, Mead & Pickable Timer Sync Fix
+* **Crop, Mead & Pickable Timers**: Fixed a bug on multiplayer and dedicated servers where logging out and back in with timer protections enabled caused remaining grow, fermentation, and respawn times to jump backward and increase instead of counting down.
+* **Existing World Recovery**: Crops, fermenters, and berry bushes that had their timers pushed into the future by this bug will automatically recover when loaded.
+* **Fermenter Batches**: Fixed an issue where sleep time skipped while a fermenter was empty could delay the next batch of mead added to that barrel.
+* **Compatibility**: Updated Jotunn to 2.30.3 and dependencies for Valheim 1.0.31 stability.
 
 <details>
 <summary><b>2.0 Changelog History (Valheim Release)</b> (<i>click to expand</i>)</summary>
+
+### 2.1.4 - Valheim 1.0.30 Update & Dependency Alignment
+* **Compatibility**: Updated dependencies for Valheim 1.0.30 stability.
 
 ### 2.1.3 - Valheim 1.0.21 Update & Stability Fixes
 * **Sleep Tracking**: Fixed a rare error when checking sleeping players while a world is loading or shutting down.

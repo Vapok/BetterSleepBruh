@@ -43,8 +43,10 @@ public sealed class SleepHudView : MonoBehaviour
     private static readonly Color32 BoostYellow = new(255, 183, 91, 255);
 
     private const float StripHeightPx = 40f;
+    private const float SyncRetryIntervalSeconds = 1f;
 
     private bool _rpcsRegistered;
+    private float _syncRetryTimer;
 
     private void Awake()
     {
@@ -113,13 +115,41 @@ public sealed class SleepHudView : MonoBehaviour
         }
         else if (ZRoutedRpc.instance != null)
         {
-            ZRoutedRpc.instance.InvokeRoutedRPC(ZRoutedRpc.instance.GetServerPeerID(), "RPC_RequestSleepingPlayerInfo");
+            long serverPeerId = ZRoutedRpc.instance.GetServerPeerID();
+            if (serverPeerId != 0L)
+            {
+                _syncRetryTimer = 0f;
+                ZRoutedRpc.instance.InvokeRoutedRPC(serverPeerId, "RPC_RequestSleepingPlayerInfo");
+            }
+        }
+    }
+
+    public void EnsureBoostTotalSynced(float dt)
+    {
+        if (SleepTracker.HasSyncedBoostTotal)
+            return;
+
+        RegisterRpcs();
+
+        _syncRetryTimer += dt;
+        if (_syncRetryTimer < SyncRetryIntervalSeconds)
+            return;
+
+        _syncRetryTimer = 0f;
+        if (ZRoutedRpc.instance != null)
+        {
+            long serverPeerId = ZRoutedRpc.instance.GetServerPeerID();
+            if (serverPeerId != 0L)
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(serverPeerId, "RPC_RequestSleepingPlayerInfo");
+            }
         }
     }
 
     private void RPC_SyncSleepBoostTotal(long sender, double totalBoost)
     {
         SleepTracker.TotalPartialSleepBoostSeconds = totalBoost;
+        SleepTracker.HasSyncedBoostTotal = true;
     }
 
     private void RPC_SleepingPlayerInfo(long sender, int totalPlayers, int playersSleeping, double sleepBoost)

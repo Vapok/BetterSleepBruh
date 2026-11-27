@@ -23,6 +23,11 @@ internal static class ZNetPatches
             double extraRate = SleepTracker.CurrentExtraRate;
             if (extraRate <= 0.0)
             {
+                if (_timeSyncTimer > 0f)
+                {
+                    _timeSyncTimer = TimeSyncInterval;
+                    SyncNetTimeToPeers(__instance, 0f);
+                }
                 _timeSyncTimer = 0f;
                 return;
             }
@@ -32,14 +37,24 @@ internal static class ZNetPatches
 
             if (double.IsPositiveInfinity(morningStartSec))
             {
-                __instance.SetNetTime(time + dt * extraRate);
-                SyncNetTimeToPeers(__instance, dt);
+                double fallbackBoost = dt * extraRate;
+                __instance.SetNetTime(time + fallbackBoost);
+                if (fallbackBoost > 0.0)
+                {
+                    SleepTracker.TotalPartialSleepBoostSeconds += fallbackBoost;
+                    SyncNetTimeToPeers(__instance, dt);
+                }
                 return;
             }
 
             if (time >= morningStartSec)
             {
                 __instance.SetNetTime(morningStartSec);
+                if (_timeSyncTimer > 0f)
+                {
+                    _timeSyncTimer = TimeSyncInterval;
+                    SyncNetTimeToPeers(__instance, 0f);
+                }
                 _timeSyncTimer = 0f;
                 return;
             }
